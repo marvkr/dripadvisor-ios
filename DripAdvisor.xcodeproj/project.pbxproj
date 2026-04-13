@@ -1,0 +1,513 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		F100000000000001 /* DripAdvisorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000001; };
+		F100000000000002 /* GarmentCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000002; };
+		F100000000000003 /* WardrobeItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000003; };
+		F100000000000004 /* Outfit.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000004; };
+		F100000000000005 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000005; };
+		F100000000000006 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000006; };
+		F100000000000007 /* DripStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000007; };
+		F100000000000008 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000008; };
+		F100000000000009 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000009; };
+		F10000000000000A /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000A; };
+		F10000000000000B /* AvatarSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000B; };
+		F10000000000000C /* WardrobeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000C; };
+		F10000000000000D /* AddWardrobeItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000D; };
+		F10000000000000E /* TryOnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000E; };
+		F10000000000000F /* OutfitBuilderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000F; };
+		F100000000000010 /* OutfitsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000010; };
+		F100000000000011 /* StyleAgentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000011; };
+		F100000000000012 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000012; };
+		F100000000000013 /* HangerIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000013; };
+		F100000000000014 /* HangerIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000014; };
+		F100000000000015 /* TShirtIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000015; };
+		F100000000000016 /* UserPositionIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000016; };
+		F100000000000017 /* FloatingTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000017; };
+		F100000000000018 /* MessageBubble.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000018; };
+		F100000000000019 /* StylistTypingIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000019; };
+		F10000000000001A /* WardrobeItemCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000001A; };
+		F10000000000001B /* OutfitRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000001B; };
+		F10000000000001C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F20000000000001C; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		F200000000000001 /* DripAdvisorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DripAdvisorApp.swift; sourceTree = "<group>"; };
+		F200000000000002 /* GarmentCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentCategory.swift; sourceTree = "<group>"; };
+		F200000000000003 /* WardrobeItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WardrobeItem.swift; sourceTree = "<group>"; };
+		F200000000000004 /* Outfit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Outfit.swift; sourceTree = "<group>"; };
+		F200000000000005 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
+		F200000000000006 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
+		F200000000000007 /* DripStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DripStore.swift; sourceTree = "<group>"; };
+		F200000000000008 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		F200000000000009 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		F20000000000000A /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		F20000000000000B /* AvatarSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarSetupView.swift; sourceTree = "<group>"; };
+		F20000000000000C /* WardrobeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WardrobeView.swift; sourceTree = "<group>"; };
+		F20000000000000D /* AddWardrobeItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddWardrobeItemView.swift; sourceTree = "<group>"; };
+		F20000000000000E /* TryOnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TryOnView.swift; sourceTree = "<group>"; };
+		F20000000000000F /* OutfitBuilderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitBuilderView.swift; sourceTree = "<group>"; };
+		F200000000000010 /* OutfitsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitsView.swift; sourceTree = "<group>"; };
+		F200000000000011 /* StyleAgentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StyleAgentView.swift; sourceTree = "<group>"; };
+		F200000000000012 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		F200000000000013 /* HangerIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HangerIcon.swift; sourceTree = "<group>"; };
+		F200000000000014 /* HangerIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HangerIconView.swift; sourceTree = "<group>"; };
+		F200000000000015 /* TShirtIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TShirtIconView.swift; sourceTree = "<group>"; };
+		F200000000000016 /* UserPositionIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserPositionIcon.swift; sourceTree = "<group>"; };
+		F200000000000017 /* FloatingTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingTabBar.swift; sourceTree = "<group>"; };
+		F200000000000018 /* MessageBubble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageBubble.swift; sourceTree = "<group>"; };
+		F200000000000019 /* StylistTypingIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StylistTypingIndicator.swift; sourceTree = "<group>"; };
+		F20000000000001A /* WardrobeItemCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WardrobeItemCard.swift; sourceTree = "<group>"; };
+		F20000000000001B /* OutfitRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitRow.swift; sourceTree = "<group>"; };
+		F20000000000001C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F200000000000099 /* DripAdvisor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DripAdvisor.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		CC00000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		DD00000000000001 = {
+			isa = PBXGroup;
+			children = (
+				DD00000000000002 /* DripAdvisor */,
+				DD00000000000099 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		DD00000000000002 /* DripAdvisor */ = {
+			isa = PBXGroup;
+			children = (
+				F200000000000001 /* DripAdvisorApp.swift */,
+				DD00000000000003 /* Models */,
+				DD00000000000004 /* Store */,
+				DD00000000000005 /* Theme */,
+				DD00000000000006 /* Screens */,
+				DD00000000000007 /* Components */,
+				F20000000000001C /* Assets.xcassets */,
+			);
+			path = DripAdvisor;
+			sourceTree = "<group>";
+		};
+		DD00000000000003 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				F200000000000002 /* GarmentCategory.swift */,
+				F200000000000003 /* WardrobeItem.swift */,
+				F200000000000004 /* Outfit.swift */,
+				F200000000000005 /* ChatMessage.swift */,
+				F200000000000006 /* UserProfile.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		DD00000000000004 /* Store */ = {
+			isa = PBXGroup;
+			children = (
+				F200000000000007 /* DripStore.swift */,
+			);
+			path = Store;
+			sourceTree = "<group>";
+		};
+		DD00000000000005 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				F200000000000008 /* Theme.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		DD00000000000006 /* Screens */ = {
+			isa = PBXGroup;
+			children = (
+				F200000000000009 /* RootView.swift */,
+				F20000000000000A /* MainTabView.swift */,
+				F20000000000000B /* AvatarSetupView.swift */,
+				F20000000000000C /* WardrobeView.swift */,
+				F20000000000000D /* AddWardrobeItemView.swift */,
+				F20000000000000E /* TryOnView.swift */,
+				F20000000000000F /* OutfitBuilderView.swift */,
+				F200000000000010 /* OutfitsView.swift */,
+				F200000000000011 /* StyleAgentView.swift */,
+				F200000000000012 /* ProfileView.swift */,
+			);
+			path = Screens;
+			sourceTree = "<group>";
+		};
+		DD00000000000007 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				DD00000000000008 /* Icons */,
+				DD00000000000009 /* UI */,
+				DD0000000000000A /* Agent */,
+				DD0000000000000B /* Outfits */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		DD00000000000008 /* Icons */ = {
+			isa = PBXGroup;
+			children = (
+				F200000000000013 /* HangerIcon.swift */,
+				F200000000000014 /* HangerIconView.swift */,
+				F200000000000015 /* TShirtIconView.swift */,
+				F200000000000016 /* UserPositionIcon.swift */,
+			);
+			path = Icons;
+			sourceTree = "<group>";
+		};
+		DD00000000000009 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				F200000000000017 /* FloatingTabBar.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		DD0000000000000A /* Agent */ = {
+			isa = PBXGroup;
+			children = (
+				F200000000000018 /* MessageBubble.swift */,
+				F200000000000019 /* StylistTypingIndicator.swift */,
+			);
+			path = Agent;
+			sourceTree = "<group>";
+		};
+		DD0000000000000B /* Outfits */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000001A /* WardrobeItemCard.swift */,
+				F20000000000001B /* OutfitRow.swift */,
+			);
+			path = Outfits;
+			sourceTree = "<group>";
+		};
+		DD00000000000099 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F200000000000099 /* DripAdvisor.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		EE00000000000001 /* DripAdvisor */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FF00000000000001 /* Build configuration list for PBXNativeTarget "DripAdvisor" */;
+			buildPhases = (
+				1100000000000001 /* Sources */,
+				CC00000000000001 /* Frameworks */,
+				1200000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DripAdvisor;
+			productName = DripAdvisor;
+			productReference = F200000000000099 /* DripAdvisor.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		1300000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 2630;
+				TargetAttributes = {
+					EE00000000000001 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = 1400000000000001 /* Build configuration list for PBXProject "DripAdvisor" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = DD00000000000001;
+			productRefGroup = DD00000000000099 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				EE00000000000001 /* DripAdvisor */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1200000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F10000000000001C /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1100000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F100000000000001 /* DripAdvisorApp.swift in Sources */,
+				F100000000000002 /* GarmentCategory.swift in Sources */,
+				F100000000000003 /* WardrobeItem.swift in Sources */,
+				F100000000000004 /* Outfit.swift in Sources */,
+				F100000000000005 /* ChatMessage.swift in Sources */,
+				F100000000000006 /* UserProfile.swift in Sources */,
+				F100000000000007 /* DripStore.swift in Sources */,
+				F100000000000008 /* Theme.swift in Sources */,
+				F100000000000009 /* RootView.swift in Sources */,
+				F10000000000000A /* MainTabView.swift in Sources */,
+				F10000000000000B /* AvatarSetupView.swift in Sources */,
+				F10000000000000C /* WardrobeView.swift in Sources */,
+				F10000000000000D /* AddWardrobeItemView.swift in Sources */,
+				F10000000000000E /* TryOnView.swift in Sources */,
+				F10000000000000F /* OutfitBuilderView.swift in Sources */,
+				F100000000000010 /* OutfitsView.swift in Sources */,
+				F100000000000011 /* StyleAgentView.swift in Sources */,
+				F100000000000012 /* ProfileView.swift in Sources */,
+				F100000000000013 /* HangerIcon.swift in Sources */,
+				F100000000000014 /* HangerIconView.swift in Sources */,
+				F100000000000015 /* TShirtIconView.swift in Sources */,
+				F100000000000016 /* UserPositionIcon.swift in Sources */,
+				F100000000000017 /* FloatingTabBar.swift in Sources */,
+				F100000000000018 /* MessageBubble.swift in Sources */,
+				F100000000000019 /* StylistTypingIndicator.swift in Sources */,
+				F10000000000001A /* WardrobeItemCard.swift in Sources */,
+				F10000000000001B /* OutfitRow.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1500000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		1500000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		1500000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SJ9MSN5XRH;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "DripAdvisor uses the camera so you can capture your avatar and clothing items.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "DripAdvisor needs access to your photo library so you can set your avatar and add clothing items.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dripadvisor.DripAdvisor;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		1500000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SJ9MSN5XRH;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "DripAdvisor uses the camera so you can capture your avatar and clothing items.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "DripAdvisor needs access to your photo library so you can set your avatar and add clothing items.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dripadvisor.DripAdvisor;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1400000000000001 /* Build configuration list for PBXProject "DripAdvisor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1500000000000001 /* Debug */,
+				1500000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FF00000000000001 /* Build configuration list for PBXNativeTarget "DripAdvisor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1500000000000003 /* Debug */,
+				1500000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 1300000000000001 /* Project object */;
+}
