@@ -16,6 +16,26 @@ final class DripStore {
     var isOnboarded: Bool { profile.avatarData != nil }
     var isStylistThinking: Bool = false
 
+    /// Optional backend sync bridge. When non-nil, wardrobe inserts are pushed
+    /// asynchronously to the backend via `WardrobeSync`. Nil in tests / offline v0.
+    var sync: WardrobeSync?
+
+    /// Optional real try-on service. When non-nil, `runTryOn` hits the backend
+    /// + Gemini Nano Banana Pro. When nil, falls back to the local
+    /// `simulateTryOn` stub (avatar copied to tryOn slot, no compositing).
+    var tryOn: TryOnService?
+
+    enum TryOnState: Equatable {
+        case idle
+        case uploading
+        case generating
+        case finalizing
+        case done
+        case failed(String)
+    }
+
+    var tryOnState: TryOnState = .idle
+
     // MARK: Avatar
 
     func setAvatar(_ data: Data) {
@@ -30,6 +50,27 @@ final class DripStore {
 
     func addItem(_ item: WardrobeItem) {
         wardrobe.insert(item, at: 0)
+        if let sync {
+            Task { await sync.pushAfterInsert(item) }
+        }
+    }
+
+    /// Merge server-authoritative items into the local wardrobe.
+    /// Replaces any existing entry with the same id; keeps locally-only items that
+    /// haven't finished syncing yet.
+    func hydrateWardrobe(from remote: [DripAPI.WardrobeItemDTO]) {
+        let mapped = remote.compactMap { dto -> WardrobeItem? in
+            guard let cat = GarmentCategory(rawValue: dto.category) else { return nil }
+            return WardrobeItem(
+                id: dto.id,
+                name: dto.name,
+                brand: dto.brand,
+                category: cat,
+                createdAt: dto.createdAt
+            )
+        }
+        let localOnly = wardrobe.filter { local in !mapped.contains(where: { $0.id == local.id }) }
+        wardrobe = (mapped + localOnly).sorted { $0.createdAt > $1.createdAt }
     }
 
     func removeItem(_ item: WardrobeItem) {
@@ -51,12 +92,54 @@ final class DripStore {
         wardrobe.filter { $0.category == category }
     }
 
-    // MARK: Try-on simulation
+    // MARK: Try-on
 
-    func simulateTryOn(for itemID: UUID) async {
-        guard let index = wardrobe.firstIndex(where: { $0.id == itemID }) else { return }
+    /// Runs a real try-on if `tryOn` service is wired; otherwise falls back to
+    /// the local stub. Returns the new state of `tryOnState`.
+    @discardableResult
+    func runTryOn(for itemID: UUID, occasion: String? = nil) async -> TryOnState {
+        guard let index = wardrobe.firstIndex(where: { $0.id == itemID }) else {
+            tryOnState = .failed("Item not found")
+            return tryOnState
+        }
+        guard let avatarData = profile.avatarData else {
+            tryOnState = .failed("Set up your avatar first")
+            return tryOnState
+        }
+        guard let garmentData = wardrobe[index].imageData else {
+            tryOnState = .failed("Item has no image")
+            return tryOnState
+        }
+
+        if let tryOn {
+            tryOnState = .uploading
+            do {
+                tryOnState = .generating
+                let result = try await tryOn.compose(
+                    avatarData: avatarData,
+                    garmentData: garmentData,
+                    occasion: occasion
+                )
+                tryOnState = .finalizing
+                wardrobe[index].tryOnImageData = result.imageData
+                tryOnState = .done
+            } catch {
+                tryOnState = .failed(error.localizedDescription)
+            }
+            return tryOnState
+        }
+
+        // Local stub fallback (no backend wired).
         try? await Task.sleep(for: .seconds(1.4))
         wardrobe[index].tryOnImageData = wardrobe[index].imageData ?? profile.avatarData
+        tryOnState = .done
+        return tryOnState
+    }
+
+    /// Back-compat shim for the original stub call site. Kept until views
+    /// migrate to `runTryOn`.
+    func simulateTryOn(for itemID: UUID) async {
+        await runTryOn(for: itemID)
     }
 
     // MARK: Outfits

@@ -10,3 +10,7 @@ xcuserdata/
 
 # Claude
 .claude/
+
+# Env files (commit .env.example only)
+.env
+**/.env

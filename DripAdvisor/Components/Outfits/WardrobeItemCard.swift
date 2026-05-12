@@ -5,20 +5,23 @@ struct WardrobeItemCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            ZStack {
-                Rectangle().fill(Theme.bg)
-                if let image = item.uiImage {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                } else {
-                    Image(systemName: item.category.systemImage)
-                        .font(.system(size: 40, weight: .ultraLight))
-                        .foregroundStyle(Theme.textDisabled)
+            GeometryReader { proxy in
+                ZStack {
+                    Rectangle().fill(Theme.bg)
+                    if let image = item.uiImage {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: proxy.size.width, height: proxy.size.height)
+                            .clipped()
+                    } else {
+                        Image(systemName: item.category.systemImage)
+                            .font(.system(size: 40, weight: .ultraLight))
+                            .foregroundStyle(Theme.textDisabled)
+                    }
                 }
             }
             .aspectRatio(0.75, contentMode: .fit)
-            .clipped()
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.name)

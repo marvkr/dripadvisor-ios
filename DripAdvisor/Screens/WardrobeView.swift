@@ -30,23 +30,39 @@ struct WardrobeView: View {
     }
 
     private var wardrobeGrid: some View {
-        LazyVGrid(columns: [
-            GridItem(.flexible(), spacing: 6),
-            GridItem(.flexible(), spacing: 6)
-        ], spacing: 6) {
+        LazyVGrid(
+            columns: [
+                GridItem(.flexible(), spacing: 6),
+                GridItem(.flexible(), spacing: 6)
+            ],
+            spacing: 6
+        ) {
             ForEach(store.wardrobe) { item in
                 Button { tryOnItem = item } label: {
                     WardrobeItemCard(item: item)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(WardrobeCardPressStyle())
                 .contextMenu {
                     Button("Try On", action: { tryOnItem = item })
-                    Button("Delete", systemImage: "trash", role: .destructive, action: { store.removeItem(item) })
+                    Button("Delete", systemImage: "trash", role: .destructive) {
+                        withAnimation(.spring(duration: 0.45, bounce: 0.25)) {
+                            store.removeItem(item)
+                        }
+                    }
                 }
             }
         }
         .padding(8)
         .padding(.bottom, 100)
+        .animation(.spring(duration: 0.45, bounce: 0.3), value: store.wardrobe.count)
+    }
+}
+
+struct WardrobeCardPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
+            .animation(.spring(duration: 0.25, bounce: 0.4), value: configuration.isPressed)
     }
 }
 
@@ -73,21 +89,26 @@ struct WardrobeEmptyState: View {
 
 struct WardrobeFAB: View {
     let action: () -> Void
+    @State private var pulse = false
 
     var body: some View {
-        Button("Add Item", systemImage: "plus", action: action)
-            .labelStyle(.iconOnly)
-            .font(.system(size: 28))
-            .foregroundStyle(Theme.textSecondary)
-            .frame(width: 56, height: 56)
-            .background(.ultraThinMaterial)
-            .clipShape(.rect(cornerRadius: 28))
-            .overlay(
-                RoundedRectangle(cornerRadius: 28)
-                    .strokeBorder(Theme.glassBorder, lineWidth: 1.5)
-            )
-            .shadow(color: .black.opacity(0.1), radius: 8, y: 0)
-            .padding(.trailing, 20)
-            .padding(.bottom, 60)
+        Button(action: action) {
+            Image(systemName: "plus")
+                .font(.system(size: 28))
+                .foregroundStyle(Theme.textSecondary)
+                .symbolEffect(.bounce, value: pulse)
+                .frame(width: 56, height: 56)
+                .background(.ultraThinMaterial)
+                .clipShape(.rect(cornerRadius: 28))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 28)
+                        .strokeBorder(Theme.glassBorder, lineWidth: 1.5)
+                )
+                .shadow(color: .black.opacity(0.1), radius: 8, y: 0)
+        }
+        .buttonStyle(WardrobeCardPressStyle())
+        .simultaneousGesture(TapGesture().onEnded { pulse.toggle() })
+        .padding(.trailing, 20)
+        .padding(.bottom, 60)
     }
 }

@@ -37,6 +37,8 @@ struct AddWardrobeItemView: View {
                         }
                         .disabled(!canSave)
                         .opacity(canSave ? 1 : 0.4)
+                        .scaleEffect(canSave ? 1 : 0.98)
+                        .animation(.spring(duration: 0.35, bounce: 0.3), value: canSave)
                     }
                     .padding(20)
                 }
@@ -61,12 +63,23 @@ struct AddWardrobeItemView: View {
         guard let pickerItem else { return }
         isExtracting = true
         defer { isExtracting = false }
-        if let data = try? await pickerItem.loadTransferable(type: Data.self),
-           let image = UIImage(data: data) {
-            try? await Task.sleep(for: .milliseconds(900))
-            imageData = data
-            previewImage = image
+        guard
+            let rawData = try? await pickerItem.loadTransferable(type: Data.self),
+            let rawImage = UIImage(data: rawData)
+        else { return }
+
+        let extracted = await Task.detached(priority: .userInitiated) {
+            try? await BackgroundRemover.removeBackground(from: rawImage)
+        }.value
+
+        if let extracted, let extractedImage = UIImage(data: extracted) {
+            imageData = extracted
+            previewImage = extractedImage
             hasExtracted = true
+        } else {
+            imageData = rawData
+            previewImage = rawImage
+            hasExtracted = false
         }
     }
 
@@ -97,6 +110,11 @@ struct AddItemPhotoSection: View {
                     .resizable()
                     .scaledToFit()
                     .clipShape(.rect(cornerRadius: 20))
+                    .id(previewImage.hashValue)
+                    .transition(
+                        .scale(scale: 0.88)
+                        .combined(with: .opacity)
+                    )
                     .overlay(alignment: .topTrailing) {
                         if hasExtracted {
                             Label("Extracted", systemImage: "checkmark.seal.fill")
@@ -106,6 +124,11 @@ struct AddItemPhotoSection: View {
                                 .padding(.vertical, 6)
                                 .background(Theme.buttonPrimary, in: Capsule())
                                 .padding(12)
+                                .transition(
+                                    .scale(scale: 0.6)
+                                    .combined(with: .opacity)
+                                )
+                                .symbolEffect(.bounce, value: hasExtracted)
                         }
                     }
             } else {
@@ -113,25 +136,22 @@ struct AddItemPhotoSection: View {
                     Image(systemName: "photo.stack.fill")
                         .font(.system(size: 48, weight: .ultraLight))
                         .foregroundStyle(Theme.textDisabled)
+                        .symbolEffect(.pulse, options: .repeating)
                     Text("Screenshot or photo")
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(Theme.textMuted)
                 }
+                .transition(.opacity)
             }
 
             if isExtracting {
-                ZStack {
-                    Color.black.opacity(0.3)
-                    VStack(spacing: 10) {
-                        ProgressView().tint(.white)
-                        Text("Extracting garment…")
-                            .font(.footnote)
-                            .foregroundStyle(.white)
-                    }
-                }
-                .clipShape(.rect(cornerRadius: 24))
+                ExtractionOverlay()
+                    .transition(.opacity)
             }
         }
+        .animation(.spring(duration: 0.55, bounce: 0.4), value: previewImage)
+        .animation(.spring(duration: 0.45, bounce: 0.3), value: hasExtracted)
+        .animation(.easeInOut(duration: 0.25), value: isExtracting)
         .frame(height: 300)
         .frame(maxWidth: .infinity)
         .glassCard()
@@ -146,6 +166,28 @@ struct AddItemPhotoSection: View {
                     .padding(14)
             }
         }
+    }
+}
+
+private struct ExtractionOverlay: View {
+    @State private var rotate = false
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.35)
+            VStack(spacing: 12) {
+                Image(systemName: "scissors")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .rotationEffect(.degrees(rotate ? 12 : -12))
+                    .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: rotate)
+                Text("Extracting garment…")
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(.white)
+            }
+        }
+        .clipShape(.rect(cornerRadius: 24))
+        .onAppear { rotate = true }
     }
 }
 

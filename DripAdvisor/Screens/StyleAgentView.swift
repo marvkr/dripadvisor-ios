@@ -35,21 +35,12 @@ struct StyleAgentView: View {
     private var messageList: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 8) {
-                    ForEach(store.messages) { message in
-                        MessageBubble(message: message)
-                            .id(message.id)
-                    }
-                    if store.isStylistThinking {
-                        StylistTypingIndicator()
-                            .id("typing")
-                    }
-                }
-                .padding(16)
-                .padding(.bottom, 8)
+                messageListContent
+                    .padding(16)
+                    .padding(.bottom, 8)
             }
             .onChange(of: store.messages.count) { _, _ in
-                withAnimation(.easeOut) {
+                withAnimation(.spring(duration: 0.45, bounce: 0.25)) {
                     proxy.scrollTo(store.messages.last?.id, anchor: .bottom)
                 }
             }
@@ -59,6 +50,32 @@ struct StyleAgentView: View {
                 }
             }
         }
+    }
+
+    private var messageListContent: some View {
+        LazyVStack(alignment: .leading, spacing: 8) {
+            ForEach(store.messages) { message in
+                bubble(for: message)
+            }
+            if shouldShowTypingIndicator {
+                StylistTypingIndicator()
+                    .id("typing")
+                    .transition(.opacity.combined(with: .scale(scale: 0.9)))
+            }
+        }
+        .animation(.spring(duration: 0.45, bounce: 0.3), value: store.messages.map(\.id))
+        .animation(.easeInOut(duration: 0.2), value: store.isStylistThinking)
+    }
+
+    private var shouldShowTypingIndicator: Bool {
+        store.isStylistThinking && (store.messages.last?.text.isEmpty ?? true)
+    }
+
+    private func bubble(for message: ChatMessage) -> some View {
+        let streaming = message.id == store.messages.last?.id && store.isStylistThinking
+        return MessageBubble(message: message)
+            .environment(\.dripIsLatestStreaming, streaming)
+            .id(message.id)
     }
 
     private func send() {
@@ -104,29 +121,7 @@ struct ChatComposer: View {
             }
 
             HStack(spacing: 10) {
-                TextField("What should I wear tonight?", text: $draft, axis: .vertical)
-                    .lineLimit(1...4)
-                    .focused(isComposerFocused)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(Theme.textPrimary)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(Color.white.opacity(isComposerFocused.wrappedValue ? 0.85 : 0.55))
-                    .clipShape(.rect(cornerRadius: 20))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .strokeBorder(
-                                isComposerFocused.wrappedValue ? Color.black.opacity(0.2) : Theme.glassBorder,
-                                lineWidth: 1.5
-                            )
-                    )
-                    .shadow(
-                        color: .black.opacity(isComposerFocused.wrappedValue ? 0.1 : 0.04),
-                        radius: isComposerFocused.wrappedValue ? 6 : 1, y: 0
-                    )
-                    .tint(Theme.textPrimary)
-                    .onSubmit(onSend)
-                    .animation(.spring(duration: 0.25), value: isComposerFocused.wrappedValue)
+                composerTextField
 
                 Button("Send", systemImage: "arrow.up", action: onSend)
                     .labelStyle(.iconOnly)
@@ -141,5 +136,37 @@ struct ChatComposer: View {
             .padding(.bottom, 60)
             .padding(.top, 6)
         }
+    }
+
+    @ViewBuilder
+    private var composerTextField: some View {
+        let base = TextField("What should I wear tonight?", text: $draft, axis: .vertical)
+            .lineLimit(1...4)
+            .focused(isComposerFocused)
+            .font(.system(size: 15, weight: .medium))
+            .foregroundStyle(Theme.textPrimary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .tint(Theme.textPrimary)
+            .onSubmit(onSend)
+            .animation(.spring(duration: 0.25), value: isComposerFocused.wrappedValue)
+
+        if #available(iOS 26.0, *) {
+            base
+                .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 20))
+                .overlay(composerBorder)
+        } else {
+            base
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+                .overlay(composerBorder)
+        }
+    }
+
+    private var composerBorder: some View {
+        RoundedRectangle(cornerRadius: 20)
+            .strokeBorder(
+                isComposerFocused.wrappedValue ? Color.black.opacity(0.2) : Theme.glassBorder,
+                lineWidth: 1.5
+            )
     }
 }

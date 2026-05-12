@@ -7,6 +7,8 @@ enum AppTab: Hashable {
 struct FloatingTabBar: View {
     @Binding var selectedTab: AppTab
 
+    @Namespace private var indicatorNamespace
+
     var body: some View {
         HStack(spacing: 0) {
             tabButton(tab: .wardrobe) {
@@ -27,6 +29,7 @@ struct FloatingTabBar: View {
                 Image(systemName: "sparkles")
                     .font(.system(size: 22))
                     .foregroundStyle(selectedTab == .stylist ? Theme.iconActive : Theme.iconInactive)
+                    .symbolEffect(.bounce, value: selectedTab == .stylist)
             }
         }
         .padding(.horizontal, 12)
@@ -49,15 +52,17 @@ struct FloatingTabBar: View {
 
     private func tabButton<Content: View>(tab: AppTab, @ViewBuilder icon: () -> Content) -> some View {
         Button {
-            withAnimation(.spring(duration: 0.25)) { selectedTab = tab }
+            withAnimation(.spring(duration: 0.4, bounce: 0.35)) { selectedTab = tab }
         } label: {
             icon()
                 .frame(width: 44, height: 36)
+                .scaleEffect(selectedTab == tab ? 1.12 : 1)
                 .background {
                     if selectedTab == tab {
                         Circle()
                             .fill(Color.black.opacity(0.06))
                             .frame(width: 36, height: 36)
+                            .matchedGeometryEffect(id: "selectedTabIndicator", in: indicatorNamespace)
                     }
                 }
                 .frame(maxWidth: .infinity)

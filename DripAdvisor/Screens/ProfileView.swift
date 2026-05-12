@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @Environment(DripStore.self) private var store
+    @Environment(AuthStore.self) private var auth
 
     var body: some View {
         NavigationStack {
@@ -18,6 +19,12 @@ struct ProfileView: View {
                         Button(role: .destructive, action: { withAnimation { store.clearAvatar() } }) {
                             Label("Reset Avatar", systemImage: "arrow.counterclockwise")
                                 .secondaryButton()
+                        }
+                        if auth.isAuthenticated {
+                            Button(role: .destructive, action: { auth.signOut() }) {
+                                Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                                    .secondaryButton()
+                            }
                         }
                     }
                     .padding(24)
