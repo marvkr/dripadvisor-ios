@@ -7,7 +7,11 @@ import SwiftUI
 struct PaywallView: View {
     @Environment(\.dismiss) private var dismiss
 
-    private let subscriptionGroupID = "dripadvisor.pro"
+    // Matches `subscriptionGroupID` on each subscription product in
+    // Products.storekit (and the App Store Connect group reference id in prod).
+    // SubscriptionStoreView requires the numeric id, not the human-readable
+    // group name "dripadvisor.pro".
+    private let subscriptionGroupID = "20010001"
 
     var body: some View {
         ZStack {

@@ -92,6 +92,7 @@
 		F200000000000027 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		F200000000000028 /* EntitlementStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntitlementStore.swift; sourceTree = "<group>"; };
 		F200000000000029 /* TryOnService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TryOnService.swift; sourceTree = "<group>"; };
+		F20000000000002A /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Products.storekit; sourceTree = "<group>"; };
 		F200000000000020 /* BackgroundRemover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundRemover.swift; sourceTree = "<group>"; };
 		F200000000000021 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		F200000000000022 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
@@ -150,6 +151,7 @@
 				DD00000000000006 /* Screens */,
 				DD00000000000007 /* Components */,
 				F20000000000001C /* Assets.xcassets */,
+				F20000000000002A /* Products.storekit */,
 			);
 			path = DripAdvisor;
 			sourceTree = "<group>";
