@@ -1,4 +1,16 @@
 import Foundation
+import SwiftUI
+
+private struct DripAPIKey: EnvironmentKey {
+    static let defaultValue: DripAPI? = nil
+}
+
+extension EnvironmentValues {
+    var dripAPI: DripAPI? {
+        get { self[DripAPIKey.self] }
+        set { self[DripAPIKey.self] = newValue }
+    }
+}
 
 /// High-level endpoint DTOs + thin wrapper calls. Mirrors backend/internal/httpapi.
 struct DripAPI: Sendable {
@@ -68,6 +80,25 @@ struct DripAPI: Sendable {
 
     func deleteWardrobe(id: UUID) async throws {
         try await client.delete("/v1/wardrobe/\(id.uuidString.lowercased())")
+    }
+
+    // MARK: Scrape (Add-from-web)
+
+    struct ScrapeRequest: Encodable {
+        let url: String
+    }
+
+    struct ScrapeResponse: Decodable, Hashable {
+        let name: String?
+        let brand: String?
+        let imageUrl: String?
+        let retailPrice: Double?
+        let currency: String?
+        let sourceUrl: String?
+    }
+
+    func scrapeWardrobe(url: String) async throws -> ScrapeResponse {
+        try await client.post("/v1/wardrobe/scrape", body: ScrapeRequest(url: url))
     }
 
     // MARK: Try-On

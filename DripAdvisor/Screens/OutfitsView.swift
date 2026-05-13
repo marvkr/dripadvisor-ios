@@ -29,7 +29,7 @@ struct OutfitsView: View {
                     }
                 }
 
-                WardrobeFAB(action: { isBuilding = true })
+                WardrobeFAB(onCloset: { isBuilding = true }, onWeb: { isBuilding = true })
             }
             .navigationTitle("Outfits")
             .sheet(isPresented: $isBuilding) {

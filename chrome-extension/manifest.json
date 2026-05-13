@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "DripAdvisor — Save to Wardrobe",
+  "description": "Save outfits, garments, and product pages from anywhere on the web to your DripAdvisor wardrobe.",
+  "version": "0.1.0",
+  "icons": {
+    "16":  "icons/icon-16.png",
+    "48":  "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "Save to DripAdvisor",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "contextMenus",
+    "scripting",
+    "identity"
+  ],
+  "host_permissions": [
+    "https://api.dripadvisor.app/*",
+    "http://localhost:8080/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

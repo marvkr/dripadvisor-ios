@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>DripAdvisor</title>
+  <style>
+    :root { color-scheme: light; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      width: 320px;
+      margin: 0;
+      padding: 16px;
+      background: #f9f5ed;
+      color: #1c1c1e;
+    }
+    h1 {
+      font-size: 18px;
+      margin: 0 0 12px 0;
+      font-family: "Times New Roman", Georgia, serif;
+    }
+    .status {
+      font-size: 12px;
+      color: #6b6b6b;
+      margin-bottom: 12px;
+    }
+    button {
+      width: 100%;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 999px;
+      background: #1c1c1e;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    button.secondary {
+      background: transparent;
+      color: #1c1c1e;
+      border: 1px solid #d4cfc4;
+    }
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #d4cfc4;
+      background: white;
+      box-sizing: border-box;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .row { margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <h1>DripAdvisor</h1>
+  <div id="status" class="status">Checking session…</div>
+
+  <div id="auth-section" hidden>
+    <div class="row">
+      <input id="token" type="password" placeholder="Paste session token" />
+      <input id="apiBase" type="text" placeholder="API base (optional)" />
+    </div>
+    <button id="save-token">Sign in</button>
+  </div>
+
+  <div id="saved-section" hidden>
+    <button id="save-page">Save current page</button>
+    <button id="sign-out" class="secondary">Sign out</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -44,6 +44,8 @@
 		F100000000000027 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000027; };
 		F100000000000028 /* EntitlementStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000028; };
 		F100000000000029 /* TryOnService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000029; };
+		F10000000000002B /* AddFromWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000002B; };
+		F10000000000002C /* WardrobeItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000002C; };
 		F100000000000020 /* BackgroundRemover.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000020; };
 		F100000000000021 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000021; };
 		F100000000000022 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000022; };
@@ -93,6 +95,8 @@
 		F200000000000028 /* EntitlementStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntitlementStore.swift; sourceTree = "<group>"; };
 		F200000000000029 /* TryOnService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TryOnService.swift; sourceTree = "<group>"; };
 		F20000000000002A /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Products.storekit; sourceTree = "<group>"; };
+		F20000000000002B /* AddFromWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddFromWebView.swift; sourceTree = "<group>"; };
+		F20000000000002C /* WardrobeItemDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WardrobeItemDetailView.swift; sourceTree = "<group>"; };
 		F200000000000020 /* BackgroundRemover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundRemover.swift; sourceTree = "<group>"; };
 		F200000000000021 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		F200000000000022 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
@@ -214,6 +218,8 @@
 				F200000000000010 /* OutfitsView.swift */,
 				F200000000000011 /* StyleAgentView.swift */,
 				F200000000000012 /* ProfileView.swift */,
+				F20000000000002B /* AddFromWebView.swift */,
+				F20000000000002C /* WardrobeItemDetailView.swift */,
 			);
 			path = Screens;
 			sourceTree = "<group>";
@@ -388,6 +394,8 @@
 				F100000000000027 /* PaywallView.swift in Sources */,
 				F100000000000028 /* EntitlementStore.swift in Sources */,
 				F100000000000029 /* TryOnService.swift in Sources */,
+				F10000000000002B /* AddFromWebView.swift in Sources */,
+				F10000000000002C /* WardrobeItemDetailView.swift in Sources */,
 				F100000000000013 /* HangerIcon.swift in Sources */,
 				F100000000000014 /* HangerIconView.swift in Sources */,
 				F100000000000015 /* TShirtIconView.swift in Sources */,

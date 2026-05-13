@@ -73,6 +73,14 @@ final class DripStore {
         wardrobe = (mapped + localOnly).sorted { $0.createdAt > $1.createdAt }
     }
 
+    func markWorn(itemID: UUID) {
+        guard let idx = wardrobe.firstIndex(where: { $0.id == itemID }) else { return }
+        wardrobe[idx].lastWornAt = .now
+        wardrobe[idx].wearCount += 1
+        // TODO: POST /v1/wardrobe/{id}/worn through sync once endpoint plumbing
+        // is generalized; offline-first local mutation is fine for v1.1.
+    }
+
     func removeItem(_ item: WardrobeItem) {
         wardrobe.removeAll { $0.id == item.id }
         for index in outfits.indices {

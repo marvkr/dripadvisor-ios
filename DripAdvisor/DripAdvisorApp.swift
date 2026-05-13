@@ -19,6 +19,7 @@ struct DripAdvisorApp: App {
             RootView(api: api)
                 .environment(store)
                 .environment(auth)
+                .environment(\.dripAPI, api)
                 .task(id: auth.isAuthenticated) {
                     if auth.isAuthenticated {
                         let sync = WardrobeSync(api: api)

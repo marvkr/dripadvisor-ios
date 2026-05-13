@@ -1,31 +1,67 @@
 import SwiftUI
 import PhotosUI
 
+enum WardrobeFilter: Hashable {
+    case all
+    case closet
+    case wishlist
+}
+
 struct WardrobeView: View {
     @Environment(DripStore.self) private var store
-    @State private var isAddingItem = false
-    @State private var tryOnItem: WardrobeItem?
+    @State private var addAction: AddAction?
+    @State private var detailItemID: UUID?
+    @State private var filter: WardrobeFilter = .all
+
+    enum AddAction: Identifiable, Hashable {
+        case fromCloset
+        case fromWeb
+        var id: Int { hashValue }
+    }
+
+    private var filtered: [WardrobeItem] {
+        switch filter {
+        case .all: store.wardrobe
+        case .closet: store.wardrobe.filter { $0.source == .owned }
+        case .wishlist: store.wardrobe.filter { $0.source == .wishlist }
+        }
+    }
 
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottomTrailing) {
                 Theme.bg.ignoresSafeArea()
 
-                ScrollView {
-                    if store.wardrobe.isEmpty {
-                        WardrobeEmptyState(onAdd: { isAddingItem = true })
+                VStack(spacing: 0) {
+                    WardrobeFilterBar(filter: $filter)
+
+                    if filtered.isEmpty {
+                        ScrollView {
+                            WardrobeEmptyState(onAdd: { addAction = .fromCloset })
+                        }
                     } else {
-                        wardrobeGrid
+                        ScrollView {
+                            wardrobeGrid
+                        }
                     }
                 }
 
-                WardrobeFAB(action: { isAddingItem = true })
+                WardrobeFAB(onCloset: { addAction = .fromCloset },
+                            onWeb:    { addAction = .fromWeb })
             }
             .navigationTitle("Wardrobe")
-            .sheet(isPresented: $isAddingItem) {
-                AddWardrobeItemView()
+            .sheet(item: $addAction) { action in
+                switch action {
+                case .fromCloset: AddWardrobeItemView()
+                case .fromWeb:    AddFromWebView()
+                }
             }
-            .sheet(item: $tryOnItem, content: TryOnView.init)
+            .sheet(item: Binding(
+                get: { detailItemID.map(IDWrapper.init(value:)) },
+                set: { detailItemID = $0?.value }
+            )) { wrap in
+                WardrobeItemDetailView(itemID: wrap.value)
+            }
         }
     }
 
@@ -38,13 +74,20 @@ struct WardrobeView: View {
             ],
             spacing: 8
         ) {
-            ForEach(store.wardrobe) { item in
-                Button { tryOnItem = item } label: {
+            ForEach(filtered) { item in
+                Button { detailItemID = item.id } label: {
                     WardrobeItemCard(item: item)
                 }
                 .buttonStyle(WardrobeCardPressStyle())
                 .contextMenu {
-                    Button("Try On", action: { tryOnItem = item })
+                    Button("Try On", systemImage: "sparkles") {
+                        detailItemID = item.id
+                    }
+                    if item.source == .owned {
+                        Button("Mark as Worn", systemImage: "checkmark.circle") {
+                            store.markWorn(itemID: item.id)
+                        }
+                    }
                     Button("Delete", systemImage: "trash", role: .destructive) {
                         withAnimation(.spring(duration: 0.45, bounce: 0.25)) {
                             store.removeItem(item)
@@ -58,12 +101,107 @@ struct WardrobeView: View {
         .padding(.horizontal, 12)
         .padding(.top, 4)
         .padding(.bottom, 100)
-        .animation(.spring(duration: 0.45, bounce: 0.3), value: store.wardrobe.count)
+        .animation(.spring(duration: 0.45, bounce: 0.3), value: filtered.count)
     }
 }
 
-/// Long-press preview — surfaces the metadata that we removed from the grid
-/// cell. Tap-and-hold any wardrobe cutout to see name / brand / category.
+// MARK: - Filter bar
+
+struct WardrobeFilterBar: View {
+    @Binding var filter: WardrobeFilter
+
+    var body: some View {
+        HStack(spacing: 6) {
+            chip(.all, "All")
+            chip(.closet, "Closet")
+            chip(.wishlist, "Wishlist")
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+    }
+
+    private func chip(_ f: WardrobeFilter, _ label: String) -> some View {
+        Button {
+            withAnimation(.spring(duration: 0.25, bounce: 0.3)) { filter = f }
+        } label: {
+            Text(label)
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(filter == f ? .white : Theme.textSecondary)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background {
+                    if filter == f {
+                        Capsule().fill(Theme.buttonPrimary)
+                    } else {
+                        Capsule().fill(Color.white.opacity(0.6))
+                    }
+                }
+                .overlay(Capsule().strokeBorder(filter == f ? .clear : Theme.glassBorder, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct WardrobeCardPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
+            .animation(.spring(duration: 0.25, bounce: 0.4), value: configuration.isPressed)
+    }
+}
+
+struct WardrobeEmptyState: View {
+    let onAdd: () -> Void
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Spacer(minLength: 80)
+            HangerIconView(size: 60, color: Theme.textMuted)
+            Text("Your wardrobe is empty")
+                .font(.system(size: 20, weight: .bold, design: .serif))
+                .foregroundStyle(Theme.textPrimary)
+            Text("Tap + to screenshot or upload clothing.\nThe AI extracts each garment so you can try it on.")
+                .font(.subheadline)
+                .foregroundStyle(Theme.textMuted)
+                .multilineTextAlignment(.center)
+            Spacer()
+        }
+        .padding(.horizontal, 32)
+        .frame(maxWidth: .infinity)
+    }
+}
+
+struct WardrobeFAB: View {
+    let onCloset: () -> Void
+    let onWeb: () -> Void
+    @State private var pulse = false
+
+    var body: some View {
+        Menu {
+            Button("From closet", systemImage: "camera", action: onCloset)
+            Button("From web", systemImage: "link", action: onWeb)
+        } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 28))
+                .foregroundStyle(Theme.textSecondary)
+                .symbolEffect(.bounce, value: pulse)
+                .frame(width: 56, height: 56)
+                .background(.ultraThinMaterial)
+                .clipShape(.rect(cornerRadius: 28))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 28)
+                        .strokeBorder(Theme.glassBorder, lineWidth: 1.5)
+                )
+                .shadow(color: .black.opacity(0.1), radius: 8, y: 0)
+        }
+        .simultaneousGesture(TapGesture().onEnded { pulse.toggle() })
+        .padding(.trailing, 20)
+        .padding(.bottom, 60)
+    }
+}
+
+/// Long-press preview surfaces the metadata removed from the grid cell.
 struct WardrobeItemPreview: View {
     let item: WardrobeItem
 
@@ -101,57 +239,8 @@ struct WardrobeItemPreview: View {
     }
 }
 
-struct WardrobeCardPressStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.96 : 1)
-            .animation(.spring(duration: 0.25, bounce: 0.4), value: configuration.isPressed)
-    }
-}
-
-struct WardrobeEmptyState: View {
-    let onAdd: () -> Void
-
-    var body: some View {
-        VStack(spacing: 20) {
-            Spacer(minLength: 80)
-            HangerIconView(size: 60, color: Theme.textMuted)
-            Text("Your wardrobe is empty")
-                .font(.system(size: 20, weight: .bold, design: .serif))
-                .foregroundStyle(Theme.textPrimary)
-            Text("Tap + to screenshot or upload clothing.\nThe AI extracts each garment so you can try it on.")
-                .font(.subheadline)
-                .foregroundStyle(Theme.textMuted)
-                .multilineTextAlignment(.center)
-            Spacer()
-        }
-        .padding(.horizontal, 32)
-        .frame(maxWidth: .infinity)
-    }
-}
-
-struct WardrobeFAB: View {
-    let action: () -> Void
-    @State private var pulse = false
-
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: "plus")
-                .font(.system(size: 28))
-                .foregroundStyle(Theme.textSecondary)
-                .symbolEffect(.bounce, value: pulse)
-                .frame(width: 56, height: 56)
-                .background(.ultraThinMaterial)
-                .clipShape(.rect(cornerRadius: 28))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 28)
-                        .strokeBorder(Theme.glassBorder, lineWidth: 1.5)
-                )
-                .shadow(color: .black.opacity(0.1), radius: 8, y: 0)
-        }
-        .buttonStyle(WardrobeCardPressStyle())
-        .simultaneousGesture(TapGesture().onEnded { pulse.toggle() })
-        .padding(.trailing, 20)
-        .padding(.bottom, 60)
-    }
+/// Bridge type so a sheet can bind to an optional UUID via Identifiable.
+struct IDWrapper: Identifiable, Hashable {
+    let value: UUID
+    var id: UUID { value }
 }

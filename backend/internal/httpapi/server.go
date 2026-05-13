@@ -50,6 +50,8 @@ func NewRouter(d *Deps) http.Handler {
 		g.Get("/v1/me", handleMe(d))
 		g.Get("/v1/wardrobe", handleListWardrobe(d))
 		g.Post("/v1/wardrobe", handleAddWardrobe(d))
+		g.Post("/v1/wardrobe/{id}/worn", handleMarkWorn(d))
+		g.Post("/v1/wardrobe/scrape", handleScrapeWardrobe(d))
 		g.Delete("/v1/wardrobe/{id}", handleDeleteWardrobe(d))
 		g.Get("/v1/outfits", handleListOutfits(d))
 		g.Post("/v1/outfits", handleCreateOutfit(d))
@@ -136,21 +138,39 @@ func handleMe(d *Deps) http.HandlerFunc {
 // ----- Wardrobe -----
 
 type wardrobeItemDTO struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	Brand     string    `json:"brand"`
-	Category  string    `json:"category"`
-	ImageURL  *string   `json:"image_url,omitempty"`
-	Tags      []string  `json:"tags"`
-	CreatedAt time.Time `json:"created_at"`
+	ID           uuid.UUID  `json:"id"`
+	Name         string     `json:"name"`
+	Brand        string     `json:"brand"`
+	Category     string     `json:"category"`
+	ImageURL     *string    `json:"image_url,omitempty"`
+	SourceURL    *string    `json:"source_url,omitempty"`
+	Tags         []string   `json:"tags"`
+	ColorPrimary *string    `json:"color_primary,omitempty"`
+	Source       string     `json:"source"`
+	Size         *string    `json:"size,omitempty"`
+	Material     *string    `json:"material,omitempty"`
+	PricePaid    *float64   `json:"price_paid,omitempty"`
+	RetailPrice  *float64   `json:"retail_price,omitempty"`
+	Currency     *string    `json:"currency,omitempty"`
+	LastWornAt   *time.Time `json:"last_worn_at,omitempty"`
+	WearCount    int        `json:"wear_count"`
+	CreatedAt    time.Time  `json:"created_at"`
 }
 
 type addWardrobeReq struct {
-	Name     string   `json:"name"`
-	Brand    string   `json:"brand"`
-	Category string   `json:"category"`
-	ImageURL *string  `json:"image_url,omitempty"`
-	Tags     []string `json:"tags,omitempty"`
+	Name         string   `json:"name"`
+	Brand        string   `json:"brand"`
+	Category     string   `json:"category"`
+	ImageURL     *string  `json:"image_url,omitempty"`
+	SourceURL    *string  `json:"source_url,omitempty"`
+	Tags         []string `json:"tags,omitempty"`
+	ColorPrimary *string  `json:"color_primary,omitempty"`
+	Source       string   `json:"source,omitempty"`
+	Size         *string  `json:"size,omitempty"`
+	Material     *string  `json:"material,omitempty"`
+	PricePaid    *float64 `json:"price_paid,omitempty"`
+	RetailPrice  *float64 `json:"retail_price,omitempty"`
+	Currency     *string  `json:"currency,omitempty"`
 }
 
 func handleListWardrobe(d *Deps) http.HandlerFunc {
@@ -163,15 +183,7 @@ func handleListWardrobe(d *Deps) http.HandlerFunc {
 		}
 		out := make([]wardrobeItemDTO, 0, len(items))
 		for _, i := range items {
-			out = append(out, wardrobeItemDTO{
-				ID:        i.ID,
-				Name:      i.Name,
-				Brand:     i.Brand,
-				Category:  i.Category,
-				ImageURL:  i.ImageURL,
-				Tags:      i.Tags,
-				CreatedAt: i.CreatedAt,
-			})
+			out = append(out, toWardrobeDTO(i))
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"items": out})
 	}
@@ -189,13 +201,29 @@ func handleAddWardrobe(d *Deps) http.HandlerFunc {
 			writeError(w, http.StatusBadRequest, "invalid category")
 			return
 		}
+		source := req.Source
+		if source == "" {
+			source = "owned"
+		}
+		if source != "owned" && source != "wishlist" {
+			writeError(w, http.StatusBadRequest, "invalid source")
+			return
+		}
 		item := &db.WardrobeItem{
-			UserID:   uid,
-			Name:     strings.TrimSpace(req.Name),
-			Brand:    strings.TrimSpace(req.Brand),
-			Category: req.Category,
-			ImageURL: req.ImageURL,
-			Tags:     req.Tags,
+			UserID:       uid,
+			Name:         strings.TrimSpace(req.Name),
+			Brand:        strings.TrimSpace(req.Brand),
+			Category:     req.Category,
+			ImageURL:     req.ImageURL,
+			SourceURL:    req.SourceURL,
+			Tags:         req.Tags,
+			ColorPrimary: req.ColorPrimary,
+			Source:       source,
+			Size:         req.Size,
+			Material:     req.Material,
+			PricePaid:    req.PricePaid,
+			RetailPrice:  req.RetailPrice,
+			Currency:     req.Currency,
 		}
 		if item.Name == "" || item.Brand == "" {
 			writeError(w, http.StatusBadRequest, "name and brand required")
@@ -208,10 +236,32 @@ func handleAddWardrobe(d *Deps) http.HandlerFunc {
 			writeError(w, http.StatusInternalServerError, "insert failed")
 			return
 		}
-		writeJSON(w, http.StatusCreated, wardrobeItemDTO{
-			ID: item.ID, Name: item.Name, Brand: item.Brand, Category: item.Category,
-			ImageURL: item.ImageURL, Tags: item.Tags, CreatedAt: item.CreatedAt,
-		})
+		writeJSON(w, http.StatusCreated, toWardrobeDTO(*item))
+	}
+}
+
+func handleMarkWorn(d *Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		uid, _ := auth.UserID(r.Context())
+		id, err := uuid.Parse(chi.URLParam(r, "id"))
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "bad id")
+			return
+		}
+		if err := d.Wardrobe.MarkWorn(r.Context(), uid, id); err != nil {
+			if errors.Is(err, db.ErrNotFound) {
+				writeError(w, http.StatusNotFound, "item not found")
+				return
+			}
+			writeError(w, http.StatusInternalServerError, "update failed")
+			return
+		}
+		item, err := d.Wardrobe.Get(r.Context(), uid, id)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "refetch failed")
+			return
+		}
+		writeJSON(w, http.StatusOK, toWardrobeDTO(*item))
 	}
 }
 
@@ -336,6 +386,28 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 
 func writeError(w http.ResponseWriter, code int, msg string) {
 	writeJSON(w, code, map[string]string{"error": msg})
+}
+
+func toWardrobeDTO(i db.WardrobeItem) wardrobeItemDTO {
+	return wardrobeItemDTO{
+		ID:           i.ID,
+		Name:         i.Name,
+		Brand:        i.Brand,
+		Category:     i.Category,
+		ImageURL:     i.ImageURL,
+		SourceURL:    i.SourceURL,
+		Tags:         i.Tags,
+		ColorPrimary: i.ColorPrimary,
+		Source:       i.Source,
+		Size:         i.Size,
+		Material:     i.Material,
+		PricePaid:    i.PricePaid,
+		RetailPrice:  i.RetailPrice,
+		Currency:     i.Currency,
+		LastWornAt:   i.LastWornAt,
+		WearCount:    i.WearCount,
+		CreatedAt:    i.CreatedAt,
+	}
 }
 
 func validCategory(c string) bool {
