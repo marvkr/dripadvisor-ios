@@ -32,10 +32,11 @@ struct WardrobeView: View {
     private var wardrobeGrid: some View {
         LazyVGrid(
             columns: [
-                GridItem(.flexible(), spacing: 6),
-                GridItem(.flexible(), spacing: 6)
+                GridItem(.flexible(), spacing: 8),
+                GridItem(.flexible(), spacing: 8),
+                GridItem(.flexible(), spacing: 8)
             ],
-            spacing: 6
+            spacing: 8
         ) {
             ForEach(store.wardrobe) { item in
                 Button { tryOnItem = item } label: {
@@ -49,12 +50,54 @@ struct WardrobeView: View {
                             store.removeItem(item)
                         }
                     }
+                } preview: {
+                    WardrobeItemPreview(item: item)
                 }
             }
         }
-        .padding(8)
+        .padding(.horizontal, 12)
+        .padding(.top, 4)
         .padding(.bottom, 100)
         .animation(.spring(duration: 0.45, bounce: 0.3), value: store.wardrobe.count)
+    }
+}
+
+/// Long-press preview — surfaces the metadata that we removed from the grid
+/// cell. Tap-and-hold any wardrobe cutout to see name / brand / category.
+struct WardrobeItemPreview: View {
+    let item: WardrobeItem
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ZStack {
+                Theme.bg
+                if let image = item.uiImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .padding(16)
+                }
+            }
+            .frame(width: 280, height: 280)
+            .clipShape(.rect(cornerRadius: 20))
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(item.name)
+                    .font(.system(size: 18, weight: .semibold, design: .serif))
+                    .foregroundStyle(Theme.textPrimary)
+                Text(item.brand)
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.textSecondary)
+                Text(item.category.displayName.uppercased())
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Theme.textDisabled)
+                    .padding(.top, 2)
+            }
+            .padding(.horizontal, 4)
+            .padding(.bottom, 12)
+        }
+        .frame(width: 280)
+        .background(.background)
     }
 }
 
