@@ -2,6 +2,32 @@
 
 Project-specific guidance for Claude Code when working in this repository. The README.md describes the product and architecture for humans; this file is directives for the agent.
 
+## Monorepo layout (locked 2026-05-13 — see `docs/adr/0001-monorepo-restructure.md`)
+
+```
+apps/
+  ios/              — Xcode project + Swift sources + Share Extension target
+    DripAdvisor.xcodeproj
+    DripAdvisor/
+    DripAdvisorTests/
+    DripAdvisorShareExtension/
+  backend/          — Go API + River workers + DB migrations
+  chrome-extension/ — MV3 extension
+  web/              — placeholder (marketing + Universal Link landing)
+packages/
+  design-tokens/    — shared color/typography source of truth
+  shared-types/     — OpenAPI 3.1 (planned)
+infra/
+  docker-compose.yml
+  hetzner/          — prod placeholder
+docs/
+  adr/              — architecture decisions
+research/           — Mobbin reference screenshots
+mise.toml + Makefile + .github/workflows/
+```
+
+**Critical**: when reading existing files, use these paths — never `DripAdvisor/Screens/`. Always prefix with `apps/ios/DripAdvisor/`.
+
 ## Research tools — use before writing code
 
 Always query these MCP servers for up-to-date information rather than relying on training recall. Hit them before making non-obvious claims or writing code against unfamiliar APIs.
@@ -72,7 +98,7 @@ Key locked items:
 
 ## Writing code in this repo
 
-- Start by reading existing files (`DripAdvisor/Screens/`, `DripAdvisor/Store/`, `DripAdvisor/Models/`) before adding new ones.
+- Start by reading existing files (`apps/ios/DripAdvisor/Screens/`, `apps/ios/DripAdvisor/Store/`, `apps/ios/DripAdvisor/Models/`, `apps/backend/internal/`) before adding new ones.
 - Prefer editing existing files over creating new ones.
 - Never commit unless explicitly asked.
 - Never co-author Claude in commits or include Claude-Code attribution.

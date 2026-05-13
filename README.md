@@ -1,6 +1,32 @@
 # DripAdvisor
 
-SwiftUI iOS app for wardrobe capture, outfit composition, and AI-styled chat.
+Polyglot monorepo for the DripAdvisor product — SwiftUI iOS app + Go backend + Chrome extension, sharing one design-token source of truth.
+
+```
+apps/
+  ios/              SwiftUI iOS app (iOS 18+)
+  backend/          Go + Postgres + Redis + River (self-hosted Hetzner)
+  chrome-extension/ Manifest V3 "Save to DripAdvisor"
+  web/              (placeholder — marketing + Universal Link landing)
+packages/
+  design-tokens/    shared colors / typography
+  shared-types/     OpenAPI 3.1 (planned) → Swift + Go + TS codegen
+infra/
+  docker-compose.yml local Postgres + Redis + MinIO
+  hetzner/          prod cloud-init / terraform (placeholder)
+docs/adr/           architecture decision records
+research/           Mobbin paywall-onboarding reference screenshots
+```
+
+## Quick start
+
+```bash
+make up              # docker compose Postgres + Redis + MinIO
+make backend         # go run ./cmd/server
+open apps/ios/DripAdvisor.xcodeproj  # Cmd+R in Xcode
+```
+
+See `mise.toml` for tool versions (`mise install`).
 
 ## Product Shape
 
@@ -302,15 +328,22 @@ Specific findings that adjusted the design:
 
 ## Repo Layout
 
+See top of this file for the apps/packages/infra/docs breakdown. Key iOS subdirs:
+
 ```
-DripAdvisor/
-├── Screens/            # SwiftUI views (per-tab + modals)
-├── Store/              # @Observable DripStore (app state)
-├── Models/             # Value types: WardrobeItem, Outfit, ChatMessage, UserProfile
-└── Theme/              # Colors, cards, button styles
-research/
-└── paywall-onboarding/ # Mobbin research screenshots (66 screens from 13 apps)
+apps/ios/
+├── DripAdvisor.xcodeproj
+├── DripAdvisor/
+│   ├── Screens/    SwiftUI views (per-tab + modals)
+│   ├── Store/      @Observable DripStore (app state)
+│   ├── Models/     Value types: WardrobeItem, Outfit, ChatMessage, UserProfile
+│   ├── Theme/      Colors, cards, button styles
+│   ├── Services/   APIClient, DripAPI, TryOnService, AuthStore, etc.
+│   └── Components/ Reusable UI bits (icons, message bubbles, tab bar)
+├── DripAdvisorShareExtension/  iOS Share Sheet target (scaffolded)
+└── DripAdvisorTests/
 ```
+
 
 ## Code Conventions
 

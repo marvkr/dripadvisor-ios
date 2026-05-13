@@ -1,0 +1,48 @@
+# mise — unified tool versions across the monorepo.
+# Install: https://mise.jdx.dev/getting-started.html
+# Then: `mise install` at the repo root.
+
+[tools]
+go     = "1.26"
+node   = "22"
+python = "3.12"
+
+# Swift is managed by Xcode; we pin via .xcode-version in apps/ios/ instead.
+
+[env]
+# Local dev defaults; override per-developer in mise.local.toml (gitignored).
+ENV = "dev"
+HTTP_ADDR = ":8080"
+DATABASE_URL = "postgres://dripadvisor:dev@localhost:54329/dripadvisor?sslmode=disable"
+REDIS_ADDR = "localhost:6380"
+S3_ENDPOINT = "http://localhost:9000"
+S3_BUCKET = "dripadvisor-dev"
+S3_REGION = "us-east-1"
+S3_USE_PATH_STYLE = "true"
+S3_ACCESS_KEY = "minioadmin"
+S3_SECRET_KEY = "minioadmin"
+
+[tasks.up]
+description = "Start docker-compose stack (Postgres + Redis + MinIO)"
+run = "docker compose -f infra/docker-compose.yml up -d"
+
+[tasks.down]
+description = "Stop docker-compose stack"
+run = "docker compose -f infra/docker-compose.yml down"
+
+[tasks.backend]
+description = "Run the Go backend with hot-restart"
+run = "cd apps/backend && go run ./cmd/server"
+
+[tasks.ios-build]
+description = "Build the iOS app for iPhone 17 Pro simulator"
+run = "xcodebuild -project apps/ios/DripAdvisor.xcodeproj -scheme DripAdvisor -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -configuration Debug build"
+
+[tasks.backend-build]
+description = "Build the Go backend"
+run = "cd apps/backend && go build ./..."
+
+[tasks.test]
+description = "Run all tests across the monorepo"
+depends = ["backend-build", "ios-build"]
+run = "cd apps/backend && go test ./..."
