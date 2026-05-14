@@ -44,6 +44,11 @@ backend-test:
 chrome-lint:
 	cd apps/chrome-extension && node -e "const m=require('./manifest.json'); if(m.manifest_version!==3) process.exit(1); console.log('manifest_version', m.manifest_version);"
 
+# Sync apps/ios/screens/*.png into the Notion screens page.
+# Requires NOTION_API_KEY env var (see scripts/README.md).
+screens-sync:
+	cd scripts && (test -d node_modules || npm install --silent) && node sync-screens-to-notion.mjs
+
 test: backend-test ios-test
 
 fmt:

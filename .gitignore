@@ -14,3 +14,7 @@ xcuserdata/
 # Env files (commit .env.example only)
 .env
 **/.env
+
+# Node
+node_modules/
+**/node_modules/

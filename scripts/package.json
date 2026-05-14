@@ -1,0 +1,11 @@
+{
+  "name": "dripadvisor-scripts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync-screens": "node sync-screens-to-notion.mjs"
+  },
+  "dependencies": {
+    "@notionhq/client": "^4.0.0"
+  }
+}
