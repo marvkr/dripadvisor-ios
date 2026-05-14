@@ -106,6 +106,7 @@ func main() {
 		Users:    db.NewUserRepo(pool),
 		Wardrobe: db.NewWardrobeRepo(pool),
 		Outfits:  db.NewOutfitRepo(pool),
+		Chats:    db.NewChatRepo(pool),
 		Apple:    auth.NewAppleVerifier(cfg.AppleBundleID),
 		Signer:   auth.NewSigner(cfg.JWTSigningSecret, cfg.SessionTTLHours),
 		Gemini:   geminiClient,

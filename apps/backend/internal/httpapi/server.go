@@ -24,6 +24,7 @@ type Deps struct {
 	Users    *db.UserRepo
 	Wardrobe *db.WardrobeRepo
 	Outfits  *db.OutfitRepo
+	Chats    *db.ChatRepo
 	Apple    *auth.AppleVerifier
 	Signer   *auth.Signer
 	Gemini   *gemini.Client // optional; nil disables /v1/tryon
@@ -63,6 +64,18 @@ func NewRouter(d *Deps) http.Handler {
 			t.Use(middleware.Timeout(100 * time.Second))
 			t.Post("/v1/tryon", handleTryOn(d))
 		})
+
+		// v1.1 chat REST (no realtime yet — PR2 adds WebSocket + Redis)
+		g.Get("/v1/chats", handleListChats(d))
+		g.Post("/v1/chats", handleCreateChat(d))
+		g.Get("/v1/chats/{id}", handleGetChat(d))
+		g.Post("/v1/chats/{id}/participants", handleAddParticipant(d))
+		g.Delete("/v1/chats/{id}/participants/{user_id}", handleRemoveParticipant(d))
+		g.Get("/v1/chats/{id}/messages", handleListMessages(d))
+		g.Post("/v1/chats/{id}/messages", handleSendMessage(d))
+		g.Post("/v1/chats/{id}/read", handleSetRead(d))
+		g.Post("/v1/messages/{id}/reactions", handleAddReaction(d))
+		g.Delete("/v1/messages/{id}/reactions/{emoji}", handleRemoveReaction(d))
 	})
 
 	return r
