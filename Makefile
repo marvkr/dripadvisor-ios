@@ -45,12 +45,16 @@ chrome-lint:
 	cd apps/chrome-extension && node -e "const m=require('./manifest.json'); if(m.manifest_version!==3) process.exit(1); console.log('manifest_version', m.manifest_version);"
 
 # Sync apps/ios/screens/*.png into the Notion screens page.
-# Requires `notion-sync` (which wraps the `ntn` Notion CLI). Auth via
-# `ntn login` once — no per-page integration secret. See
-# ~/Developer/scripts/notion-sync/README.md for setup.
-SCREENS_PAGE_ID ?= 35fb438d4d5681518557c5c1d6a66e03
+# Requires `notion-sync` (~/Developer/scripts/notion-sync). Auth uses the
+# token written by `ntn login` (macOS keychain). See that repo's README.
+SCREENS_PAGE_ID ?= 360b438d4d56818ba6f7dda55273cfde
 
+# Wipe the page and rebuild as a 3-col grid of (heading + screenshot) tiles.
 screens-sync:
+	notion-sync tile-grid --dir apps/ios/screens --page-id $(SCREENS_PAGE_ID)
+
+# Append each PNG under its existing "## NN — …" heading, idempotent.
+screens-append:
 	notion-sync screens --dir apps/ios/screens --page-id $(SCREENS_PAGE_ID)
 
 test: backend-test ios-test
