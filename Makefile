@@ -45,9 +45,12 @@ chrome-lint:
 	cd apps/chrome-extension && node -e "const m=require('./manifest.json'); if(m.manifest_version!==3) process.exit(1); console.log('manifest_version', m.manifest_version);"
 
 # Sync apps/ios/screens/*.png into the Notion screens page.
-# Requires NOTION_API_KEY env var (see scripts/README.md).
+# Requires NOTION_API_KEY env var + the `notion-sync` CLI installed.
+# Install once: ~/Developer/scripts/notion-sync (see that repo's README).
+SCREENS_PAGE_ID ?= 35fb438d4d5681518557c5c1d6a66e03
+
 screens-sync:
-	cd scripts && (test -d node_modules || npm install --silent) && node sync-screens-to-notion.mjs
+	notion-sync screens --dir apps/ios/screens --page-id $(SCREENS_PAGE_ID)
 
 test: backend-test ios-test
 
