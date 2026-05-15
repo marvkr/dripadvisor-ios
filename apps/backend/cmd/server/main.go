@@ -81,16 +81,6 @@ func main() {
 		}
 	}
 
-	riverClient, err := workers.NewClient(pool)
-	if err != nil {
-		slog.Error("river", "err", err.Error())
-		os.Exit(1)
-	}
-	if err := riverClient.Start(ctx); err != nil {
-		slog.Error("river start", "err", err.Error())
-		os.Exit(1)
-	}
-
 	var geminiClient *gemini.Client
 	if cfg.GeminiAPIKey != "" {
 		geminiClient, err = gemini.New(ctx, cfg.GeminiAPIKey)
@@ -102,14 +92,38 @@ func main() {
 		slog.Warn("GEMINI_API_KEY not set; /v1/tryon disabled")
 	}
 
+	var stylist *gemini.Stylist
+	if cfg.GeminiAPIKey != "" {
+		stylist = gemini.NewStylist(cfg.GeminiAPIKey)
+	} else {
+		slog.Warn("GEMINI_API_KEY not set; stylist replies disabled")
+	}
+
 	chats := db.NewChatRepo(pool)
+	wardrobeRepo := db.NewWardrobeRepo(pool)
 	gateway := realtime.NewGateway(rdb, chats)
+
+	riverClient, err := workers.NewClient(pool, workers.Deps{
+		Chats:    chats,
+		Wardrobe: wardrobeRepo,
+		Stylist:  stylist,
+		Realtime: rdb,
+	})
+	if err != nil {
+		slog.Error("river", "err", err.Error())
+		os.Exit(1)
+	}
+	if err := riverClient.Start(ctx); err != nil {
+		slog.Error("river start", "err", err.Error())
+		os.Exit(1)
+	}
 
 	deps := &httpapi.Deps{
 		Users:    db.NewUserRepo(pool),
-		Wardrobe: db.NewWardrobeRepo(pool),
+		Wardrobe: wardrobeRepo,
 		Outfits:  db.NewOutfitRepo(pool),
 		Chats:    chats,
+		River:    riverClient,
 		Apple:    auth.NewAppleVerifier(cfg.AppleBundleID),
 		Signer:   auth.NewSigner(cfg.JWTSigningSecret, cfg.SessionTTLHours),
 		Gemini:   geminiClient,

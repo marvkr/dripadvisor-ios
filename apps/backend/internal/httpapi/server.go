@@ -13,6 +13,9 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/riverqueue/river"
+
 	"github.com/dripadvisor/backend/internal/auth"
 	"github.com/dripadvisor/backend/internal/db"
 	"github.com/dripadvisor/backend/internal/gemini"
@@ -30,8 +33,9 @@ type Deps struct {
 	Signer   *auth.Signer
 	Gemini   *gemini.Client // optional; nil disables /v1/tryon
 	Storage  *storage.Client
-	Realtime *realtime.Redis   // optional; nil disables /v1/ws + chat fan-out
-	Gateway  *realtime.Gateway // optional; nil disables /v1/ws
+	Realtime *realtime.Redis        // optional; nil disables /v1/ws + chat fan-out
+	Gateway  *realtime.Gateway      // optional; nil disables /v1/ws
+	River    *river.Client[pgx.Tx]  // optional; nil disables stylist enqueue
 }
 
 // NewRouter builds the chi router with all endpoints mounted.

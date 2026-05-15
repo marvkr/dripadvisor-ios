@@ -2,14 +2,22 @@ package workers
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 	"github.com/riverqueue/river/rivermigrate"
+
+	"github.com/dripadvisor/backend/internal/db"
+	"github.com/dripadvisor/backend/internal/gemini"
+	"github.com/dripadvisor/backend/internal/realtime"
 )
 
 const (
@@ -109,12 +117,138 @@ func (w *ComposeOutfitWorker) Work(ctx context.Context, job *river.Job[ComposeOu
 	return nil
 }
 
+// Stylist agent UUID seeded in migration 0001 (`Drip Stylist`, persona
+// drip_stylist_v1). Worker uses this when writing reply messages.
+const StylistAgentID = "11111111-1111-1111-1111-111111111111"
+
+const stylistSystemPrompt = `You are Drip Stylist, a warm, opinionated personal stylist embedded in a private group chat.
+- Always read the user's wardrobe by calling lookup_wardrobe before recommending. Don't invent items.
+- Be concise (2-4 sentences max). Suggest one outfit at a time.
+- Format proposals as "Try the {top} with the {bottom} and {shoes}." Reference the items by their name.
+- Match the occasion the user mentions (rooftop, work, brunch, etc.).
+- Never reveal that you're an LLM. Skip pleasantries.`
+
 type StylistReplyWorker struct {
 	river.WorkerDefaults[StylistReplyArgs]
+	Chats    *db.ChatRepo
+	Wardrobe *db.WardrobeRepo
+	Stylist  *gemini.Stylist
+	Realtime *realtime.Redis
 }
 
 func (w *StylistReplyWorker) Work(ctx context.Context, job *river.Job[StylistReplyArgs]) error {
-	slog.InfoContext(ctx, "stylist_reply", "chat_id", job.Args.ChatID)
+	if w.Chats == nil || w.Stylist == nil {
+		slog.WarnContext(ctx, "stylist_reply skipped: deps not wired")
+		return nil
+	}
+	chatID, err := uuid.Parse(job.Args.ChatID)
+	if err != nil {
+		return fmt.Errorf("bad chat_id: %w", err)
+	}
+	userID, err := uuid.Parse(job.Args.UserID)
+	if err != nil {
+		return fmt.Errorf("bad user_id: %w", err)
+	}
+
+	// Pull recent context (last 20 messages). Drop deleted ones.
+	msgs, err := w.Chats.ListMessages(ctx, chatID, 0, 200)
+	if err != nil {
+		return fmt.Errorf("list ctx: %w", err)
+	}
+	if len(msgs) > 20 {
+		msgs = msgs[len(msgs)-20:]
+	}
+	history := make([]gemini.ChatMessage, 0, len(msgs))
+	for _, m := range msgs {
+		if m.DeletedAt != nil || m.Body == nil {
+			continue
+		}
+		role := "user"
+		if m.SenderAgentID != nil {
+			role = "assistant"
+		}
+		history = append(history, gemini.ChatMessage{Role: role, Content: *m.Body})
+	}
+
+	lookup := func(ctx context.Context, q gemini.WardrobeQuery) ([]map[string]any, error) {
+		// PR3 ships a coarse lookup: list everything for the user, filter
+		// in-process. Faster path (indexed `category`/`source`/`color_primary`
+		// queries) lands when wardrobe-stylist read patterns are tuned.
+		items, err := w.Wardrobe.ListByUser(ctx, userID, 200)
+		if err != nil {
+			return nil, err
+		}
+		out := make([]map[string]any, 0, len(items))
+		for _, it := range items {
+			if q.Category != nil && it.Category != *q.Category {
+				continue
+			}
+			if q.Source != nil && it.Source != *q.Source {
+				continue
+			}
+			if q.Color != nil && it.ColorPrimary != nil &&
+				!strings.EqualFold(*it.ColorPrimary, *q.Color) {
+				continue
+			}
+			out = append(out, map[string]any{
+				"id":       it.ID,
+				"name":     it.Name,
+				"brand":    it.Brand,
+				"category": it.Category,
+				"color":    it.ColorPrimary,
+				"source":   it.Source,
+			})
+			if q.Limit != nil && len(out) >= *q.Limit {
+				break
+			}
+		}
+		return out, nil
+	}
+
+	body, err := w.Stylist.Reply(ctx, stylistSystemPrompt, history, lookup)
+	if err != nil {
+		return fmt.Errorf("stylist reply: %w", err)
+	}
+	if body == "" {
+		return errors.New("stylist returned empty body")
+	}
+
+	agentID := uuid.MustParse(StylistAgentID)
+	reply := &db.Message{
+		ChatID:        chatID,
+		SenderAgentID: &agentID,
+		Body:          &body,
+	}
+
+	if w.Realtime != nil {
+		seq, err := w.Realtime.NextSeq(ctx, chatID)
+		if err != nil {
+			return fmt.Errorf("seq: %w", err)
+		}
+		reply.Seq = seq
+		if err := w.Chats.InsertMessage(ctx, reply); err != nil {
+			return fmt.Errorf("insert reply: %w", err)
+		}
+	} else {
+		if err := w.Chats.SendMessage(ctx, reply); err != nil {
+			return fmt.Errorf("send reply: %w", err)
+		}
+	}
+
+	if err := w.Chats.BumpInboxOnNewMessage(ctx, chatID, reply.Seq); err != nil {
+		slog.WarnContext(ctx, "inbox bump failed", "err", err.Error())
+	}
+
+	if w.Realtime != nil {
+		payload, _ := json.Marshal(map[string]any{
+			"type":    "message.new",
+			"message": reply,
+		})
+		_ = w.Realtime.PublishChat(ctx, chatID, payload)
+	}
+
+	slog.InfoContext(ctx, "stylist_reply sent",
+		"chat_id", chatID.String(), "seq", reply.Seq, "len", len(body))
 	return nil
 }
 
@@ -146,13 +280,26 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 	return err
 }
 
+// Deps bundles everything workers need so main.go can wire once.
+type Deps struct {
+	Chats    *db.ChatRepo
+	Wardrobe *db.WardrobeRepo
+	Stylist  *gemini.Stylist
+	Realtime *realtime.Redis
+}
+
 // NewClient wires River with the default worker set + 3 queues.
-func NewClient(pool *pgxpool.Pool) (*river.Client[pgx.Tx], error) {
+func NewClient(pool *pgxpool.Pool, d Deps) (*river.Client[pgx.Tx], error) {
 	ws := river.NewWorkers()
 	river.AddWorker(ws, &ExtractGarmentWorker{})
 	river.AddWorker(ws, &IngestBookmarkWorker{})
 	river.AddWorker(ws, &ComposeOutfitWorker{})
-	river.AddWorker(ws, &StylistReplyWorker{})
+	river.AddWorker(ws, &StylistReplyWorker{
+		Chats:    d.Chats,
+		Wardrobe: d.Wardrobe,
+		Stylist:  d.Stylist,
+		Realtime: d.Realtime,
+	})
 	river.AddWorker(ws, &PushSendWorker{})
 	river.AddWorker(ws, &AgedMessagePurgeWorker{})
 

@@ -1,8 +1,10 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -10,9 +12,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/riverqueue/river"
 
 	"github.com/dripadvisor/backend/internal/auth"
 	"github.com/dripadvisor/backend/internal/db"
+	"github.com/dripadvisor/backend/internal/workers"
 )
 
 // v1.1 Chat endpoints. REST + DB only — realtime (WebSocket + Redis pub/sub)
@@ -325,8 +329,63 @@ func handleSendMessage(d *Deps) http.HandlerFunc {
 			_ = d.Realtime.PublishChat(r.Context(), chatID, payload)
 		}
 
+		// Enqueue a stylist reply when this chat has the agent as a
+		// participant AND either:
+		//   - it's a 1:1 (direct chat with the agent → every msg replies), OR
+		//   - the body @mentions the stylist
+		// The locked v1.1 design also allows iOS 26 on-device classifier to
+		// auto-inject @stylist; that classifier just rewrites the body
+		// client-side so the same server check applies.
+		if d.River != nil && req.Body != nil {
+			shouldReply, err := stylistShouldReply(r.Context(), d, chatID, *req.Body)
+			if err == nil && shouldReply {
+				_, ierr := d.River.Insert(r.Context(),
+					workers.StylistReplyArgs{
+						ChatID:  chatID.String(),
+						UserID:  uid.String(),
+						Prompt:  *req.Body,
+						IdemKey: m.ID.String(),
+					},
+					&river.InsertOpts{Queue: workers.QueueCritical},
+				)
+				if ierr != nil {
+					slog.Warn("stylist enqueue failed", "err", ierr.Error())
+				}
+			}
+		}
+
 		writeJSON(w, http.StatusCreated, dto)
 	}
+}
+
+// stylistShouldReply gates whether a user message warrants a stylist
+// follow-up. Returns true when:
+//   - chat has an ai_agent participant, AND
+//   - the chat is a 'direct' (so the agent reads everything), OR
+//   - the body @mentions the stylist (case-insensitive "@stylist").
+func stylistShouldReply(ctx context.Context, d *Deps, chatID uuid.UUID, body string) (bool, error) {
+	parts, err := d.Chats.ListParticipants(ctx, chatID)
+	if err != nil {
+		return false, err
+	}
+	hasAgent := false
+	for _, p := range parts {
+		if p.AgentID != nil {
+			hasAgent = true
+			break
+		}
+	}
+	if !hasAgent {
+		return false, nil
+	}
+	chat, err := d.Chats.GetChat(ctx, chatID)
+	if err != nil {
+		return false, err
+	}
+	if chat.Type == "direct" {
+		return true, nil
+	}
+	return strings.Contains(strings.ToLower(body), "@stylist"), nil
 }
 
 func handleListMessages(d *Deps) http.HandlerFunc {
