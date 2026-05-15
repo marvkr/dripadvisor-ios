@@ -16,6 +16,7 @@ import (
 	"github.com/dripadvisor/backend/internal/auth"
 	"github.com/dripadvisor/backend/internal/db"
 	"github.com/dripadvisor/backend/internal/gemini"
+	"github.com/dripadvisor/backend/internal/realtime"
 	"github.com/dripadvisor/backend/internal/storage"
 )
 
@@ -29,6 +30,8 @@ type Deps struct {
 	Signer   *auth.Signer
 	Gemini   *gemini.Client // optional; nil disables /v1/tryon
 	Storage  *storage.Client
+	Realtime *realtime.Redis   // optional; nil disables /v1/ws + chat fan-out
+	Gateway  *realtime.Gateway // optional; nil disables /v1/ws
 }
 
 // NewRouter builds the chi router with all endpoints mounted.
@@ -77,6 +80,11 @@ func NewRouter(d *Deps) http.Handler {
 		g.Post("/v1/messages/{id}/reactions", handleAddReaction(d))
 		g.Delete("/v1/messages/{id}/reactions/{emoji}", handleRemoveReaction(d))
 	})
+
+	// /v1/ws sits OUTSIDE the chi Timeout middleware (it would slam shut at
+	// 30s — locked design wants long-lived sockets). Authentication happens
+	// inside handleWS via either Authorization header or ?token= query.
+	r.Get("/v1/ws", handleWS(d))
 
 	return r
 }

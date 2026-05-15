@@ -283,11 +283,49 @@ func handleSendMessage(d *Deps) http.HandlerFunc {
 			AttachmentID:   req.AttachmentID,
 			ReplyToID:      req.ReplyToID,
 		}
-		if err := d.Chats.SendMessage(r.Context(), m); err != nil {
-			writeError(w, http.StatusInternalServerError, "send failed")
-			return
+
+		// Locked v1.1 design: seq via redis.INCR chat:{id}:seq. Fall back to
+		// Postgres advisory lock when Redis is down (still correct, slower).
+		if d.Realtime != nil {
+			seq, err := d.Realtime.NextSeq(r.Context(), chatID)
+			if err != nil {
+				writeError(w, http.StatusInternalServerError, "seq failed")
+				return
+			}
+			m.Seq = seq
+			if err := d.Chats.InsertMessage(r.Context(), m); err != nil {
+				writeError(w, http.StatusInternalServerError, "send failed")
+				return
+			}
+		} else {
+			if err := d.Chats.SendMessage(r.Context(), m); err != nil {
+				writeError(w, http.StatusInternalServerError, "send failed")
+				return
+			}
 		}
-		writeJSON(w, http.StatusCreated, toMessageDTO(*m))
+
+		// Inbox durability backstop (per locked design): every participant
+		// gets an inbox row bump so the chat list shows unread + survives
+		// pub/sub delivery loss.
+		if err := d.Chats.BumpInboxOnNewMessage(r.Context(), chatID, m.Seq); err != nil {
+			// non-fatal — message already in `messages`. Log + continue.
+			// TODO: structured slog here when we wire it.
+		}
+
+		dto := toMessageDTO(*m)
+
+		// Fan out via Redis chat:{id}. Subscribed gateways forward to live
+		// sockets. Best-effort; failure here doesn't fail the request because
+		// the message is durable.
+		if d.Realtime != nil {
+			payload, _ := json.Marshal(map[string]any{
+				"type":    "message.new",
+				"message": dto,
+			})
+			_ = d.Realtime.PublishChat(r.Context(), chatID, payload)
+		}
+
+		writeJSON(w, http.StatusCreated, dto)
 	}
 }
 

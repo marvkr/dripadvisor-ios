@@ -35,7 +35,9 @@ func (r *Redis) SeedSeq(ctx context.Context, chatID uuid.UUID, high int64) error
 	return err
 }
 
-// PublishUser sends a message to user:{id} — per-user pub/sub channel (1:1-dominated fan-out).
+// PublishUser sends a message to user:{id}. Used for non-chat events (push
+// hints, presence) — chat messages now route through PublishChat per the
+// 2026-05-12 design revision (groups core → per-chat fan-out).
 func (r *Redis) PublishUser(ctx context.Context, userID uuid.UUID, payload []byte) error {
 	return r.Client.Publish(ctx, userChannel(userID), payload).Err()
 }
@@ -43,6 +45,22 @@ func (r *Redis) PublishUser(ctx context.Context, userID uuid.UUID, payload []byt
 // SubscribeUser returns a Redis PubSub subscribed to a single user channel. Caller must Close.
 func (r *Redis) SubscribeUser(ctx context.Context, userID uuid.UUID) *redis.PubSub {
 	return r.Client.Subscribe(ctx, userChannel(userID))
+}
+
+// PublishChat fans out a chat event (new message, edit, delete, reaction)
+// to every gateway holding a live socket for any participant of that chat.
+// Per locked v1.1 chat design (README "Fan-out & pub/sub").
+func (r *Redis) PublishChat(ctx context.Context, chatID uuid.UUID, payload []byte) error {
+	return r.Client.Publish(ctx, chatChannel(chatID), payload).Err()
+}
+
+// SubscribeChats subscribes to multiple chat channels at once. Caller closes.
+func (r *Redis) SubscribeChats(ctx context.Context, chatIDs ...uuid.UUID) *redis.PubSub {
+	channels := make([]string, len(chatIDs))
+	for i, id := range chatIDs {
+		channels[i] = chatChannel(id)
+	}
+	return r.Client.Subscribe(ctx, channels...)
 }
 
 // TypingHeartbeat sets a short-TTL flag for a user typing in a chat.
@@ -55,3 +73,4 @@ func (r *Redis) Close() error { return r.Client.Close() }
 
 func chatSeqKey(chatID uuid.UUID) string  { return "chat:" + chatID.String() + ":seq" }
 func userChannel(userID uuid.UUID) string { return "user:" + userID.String() }
+func chatChannel(chatID uuid.UUID) string { return "chat:" + chatID.String() }

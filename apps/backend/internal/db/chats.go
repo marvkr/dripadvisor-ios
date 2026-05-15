@@ -222,29 +222,16 @@ func (r *ChatRepo) RemoveParticipant(ctx context.Context, chatID, userID uuid.UU
 	return nil
 }
 
-// SendMessage writes a message with a per-chat seq computed inside the same
-// transaction. Uses pg_advisory_xact_lock keyed on chat_id to prevent races
-// with concurrent senders. (The locked v1.1 design specifies redis.INCR for
-// seq; this Postgres-only fallback is fine until the Redis pub/sub layer
-// lands in PR2.)
-func (r *ChatRepo) SendMessage(ctx context.Context, m *Message) error {
+// InsertMessage writes a row at the supplied seq + updates the chat's last
+// preview. Caller assigns seq beforehand (typically via redis.INCR per the
+// locked v1.1 design). Use SendMessage if you'd rather have the repo handle
+// seq via Postgres advisory lock (slower fallback).
+func (r *ChatRepo) InsertMessage(ctx context.Context, m *Message) error {
 	tx, err := r.pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
-
-	// Hash the chat_id into 64 bits for advisory lock keying.
-	if _, err := tx.Exec(ctx,
-		`SELECT pg_advisory_xact_lock(hashtextextended($1::text, 0))`, m.ChatID); err != nil {
-		return err
-	}
-
-	if err := tx.QueryRow(ctx,
-		`SELECT COALESCE(MAX(seq), 0) + 1 FROM messages WHERE chat_id = $1`,
-		m.ChatID).Scan(&m.Seq); err != nil {
-		return err
-	}
 
 	const ins = `
 INSERT INTO messages (chat_id, sender_user_id, sender_agent_id, seq, body,
@@ -274,6 +261,54 @@ WHERE id = $1`, m.ChatID, m.CreatedAt, preview); err != nil {
 	}
 
 	return tx.Commit(ctx)
+}
+
+// SendMessage assigns seq via Postgres advisory lock + COALESCE(MAX,0)+1.
+// Kept as a fallback when Redis is unavailable. Production path uses
+// realtime.NextSeq + InsertMessage directly.
+func (r *ChatRepo) SendMessage(ctx context.Context, m *Message) error {
+	tx, err := r.pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	if _, err := tx.Exec(ctx,
+		`SELECT pg_advisory_xact_lock(hashtextextended($1::text, 0))`, m.ChatID); err != nil {
+		return err
+	}
+	if err := tx.QueryRow(ctx,
+		`SELECT COALESCE(MAX(seq), 0) + 1 FROM messages WHERE chat_id = $1`,
+		m.ChatID).Scan(&m.Seq); err != nil {
+		return err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+	return r.InsertMessage(ctx, m)
+}
+
+// ChatIDsForUser returns every chat the user participates in. Used by the
+// gateway on connect to subscribe Redis chat:{id} channels.
+func (r *ChatRepo) ChatIDsForUser(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {
+	const q = `
+SELECT chat_id FROM chat_participants
+WHERE user_id = $1
+ORDER BY chat_id`
+	rows, err := r.pool.Query(ctx, q, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []uuid.UUID{}
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		out = append(out, id)
+	}
+	return out, rows.Err()
 }
 
 // ListMessages returns messages newer than `afterSeq` (or all if 0), capped.

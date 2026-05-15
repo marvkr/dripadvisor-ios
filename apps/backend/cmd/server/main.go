@@ -102,17 +102,21 @@ func main() {
 		slog.Warn("GEMINI_API_KEY not set; /v1/tryon disabled")
 	}
 
+	chats := db.NewChatRepo(pool)
+	gateway := realtime.NewGateway(rdb, chats)
+
 	deps := &httpapi.Deps{
 		Users:    db.NewUserRepo(pool),
 		Wardrobe: db.NewWardrobeRepo(pool),
 		Outfits:  db.NewOutfitRepo(pool),
-		Chats:    db.NewChatRepo(pool),
+		Chats:    chats,
 		Apple:    auth.NewAppleVerifier(cfg.AppleBundleID),
 		Signer:   auth.NewSigner(cfg.JWTSigningSecret, cfg.SessionTTLHours),
 		Gemini:   geminiClient,
 		Storage:  store,
+		Realtime: rdb,
+		Gateway:  gateway,
 	}
-	_ = rdb // reserved for chat handlers in v1.1
 
 	srv := &http.Server{
 		Addr:              cfg.HTTPAddr,
