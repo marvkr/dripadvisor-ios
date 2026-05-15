@@ -1,0 +1,44 @@
+# Caddy reverse proxy for the DripAdvisor box.
+# - Auto Let's Encrypt TLS for the API host.
+# - Strict timeouts/limits suited to /v1/tryon (90s Gemini compositing).
+
+{
+    email ops@dripadvisor.app
+    servers {
+        # Don't expose Caddy admin
+        metrics
+    }
+}
+
+api.dripadvisor.app {
+    encode zstd gzip
+
+    # Long timeouts for /v1/tryon. Default Caddy proxy timeout is 30s — too
+    # short for Gemini Nano Banana Pro composites.
+    @tryon path /v1/tryon
+    handle @tryon {
+        reverse_proxy backend:8080 {
+            transport http {
+                read_timeout 120s
+                write_timeout 120s
+            }
+        }
+    }
+
+    handle {
+        reverse_proxy backend:8080
+    }
+
+    log {
+        output file /data/access.log {
+            roll_size 50mb
+            roll_keep 7
+        }
+        format json
+    }
+}
+
+# Optional: redirect bare apex to api subdomain.
+# dripadvisor.app {
+#     redir https://api.dripadvisor.app{uri}
+# }

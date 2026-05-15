@@ -1,7 +1,7 @@
 # DripAdvisor monorepo — top-level task runner.
 # Per-app commands live in apps/*/Makefile.
 
-.PHONY: help up down ios-build ios-test backend backend-build backend-test chrome-lint test fmt lint all clean
+.PHONY: help up down ios-build ios-test backend backend-build backend-test chrome-lint test fmt lint all clean deploy
 
 help:
 	@echo "DripAdvisor monorepo targets:"
@@ -66,6 +66,12 @@ lint:
 	cd apps/backend && go vet ./...
 
 all: backend-build ios-build chrome-lint
+
+# One-shot Hetzner deploy. Wraps infra/hetzner/deploy.sh.
+# Override target host: make deploy REMOTE_HOST=root@1.2.3.4
+deploy:
+	REMOTE_HOST=$${REMOTE_HOST:-root@5.78.141.236} \
+	  bash infra/hetzner/deploy.sh
 
 clean:
 	cd apps/backend && go clean
