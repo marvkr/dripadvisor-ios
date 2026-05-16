@@ -13,8 +13,8 @@ jobs:
       run:
         working-directory: apps/backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: "1.26"
           cache-dependency-path: apps/backend/go.sum
@@ -24,14 +24,14 @@ jobs:
 
   ios:
     name: iOS (xcodebuild)
+    # PR-only. macos-15 hosted runners are slow + frequently queue out on
+    # main pushes; backend gates main; iOS gates PRs. Self-host on a Mac
+    # mini M4 later if PR turnaround feels too slow (see infra notes).
+    if: github.event_name == 'pull_request'
     runs-on: macos-15
-    # Don't gate merges on iOS until the GitHub runner image ships a
-    # matching iOS Simulator runtime. The build can succeed locally + on Cmd+R
-    # in Xcode; the runner image is missing the simulator runtime that Xcode
-    # 16 GA wants. Revisit when GitHub bumps the macos-15 image.
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Pin Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
@@ -60,5 +60,5 @@ jobs:
       run:
         working-directory: apps/chrome-extension
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: node -e "const m=require('./manifest.json'); if(m.manifest_version!==3) process.exit(1); console.log('manifest_version', m.manifest_version);"
