@@ -46,6 +46,14 @@
 		F100000000000029 /* TryOnService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000029; };
 		F10000000000002B /* AddFromWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000002B; };
 		F10000000000002C /* WardrobeItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000002C; };
+		F100000000000030 /* Conversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000030; };
+		F100000000000031 /* ChatAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000031; };
+		F100000000000032 /* ChatSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000032; };
+		F100000000000033 /* ChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000033; };
+		F100000000000034 /* ChatListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000034; };
+		F100000000000035 /* ChatThreadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000035; };
+		F100000000000036 /* ChatBubble.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000036; };
+		F100000000000037 /* ChatComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000037; };
 		F100000000000020 /* BackgroundRemover.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000020; };
 		F100000000000021 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000021; };
 		F100000000000022 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000022; };
@@ -97,6 +105,14 @@
 		F20000000000002A /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Products.storekit; sourceTree = "<group>"; };
 		F20000000000002B /* AddFromWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddFromWebView.swift; sourceTree = "<group>"; };
 		F20000000000002C /* WardrobeItemDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WardrobeItemDetailView.swift; sourceTree = "<group>"; };
+		F200000000000030 /* Conversation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conversation.swift; sourceTree = "<group>"; };
+		F200000000000031 /* ChatAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatAPI.swift; sourceTree = "<group>"; };
+		F200000000000032 /* ChatSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSocket.swift; sourceTree = "<group>"; };
+		F200000000000033 /* ChatStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStore.swift; sourceTree = "<group>"; };
+		F200000000000034 /* ChatListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListView.swift; sourceTree = "<group>"; };
+		F200000000000035 /* ChatThreadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatThreadView.swift; sourceTree = "<group>"; };
+		F200000000000036 /* ChatBubble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatBubble.swift; sourceTree = "<group>"; };
+		F200000000000037 /* ChatComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatComposer.swift; sourceTree = "<group>"; };
 		F200000000000020 /* BackgroundRemover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundRemover.swift; sourceTree = "<group>"; };
 		F200000000000021 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		F200000000000022 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
@@ -171,6 +187,8 @@
 				F200000000000025 /* WardrobeSync.swift */,
 				F200000000000028 /* EntitlementStore.swift */,
 				F200000000000029 /* TryOnService.swift */,
+				F200000000000031 /* ChatAPI.swift */,
+				F200000000000032 /* ChatSocket.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -183,6 +201,7 @@
 				F200000000000004 /* Outfit.swift */,
 				F200000000000005 /* ChatMessage.swift */,
 				F200000000000006 /* UserProfile.swift */,
+				F200000000000030 /* Conversation.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -191,6 +210,7 @@
 			isa = PBXGroup;
 			children = (
 				F200000000000007 /* DripStore.swift */,
+				F200000000000033 /* ChatStore.swift */,
 			);
 			path = Store;
 			sourceTree = "<group>";
@@ -220,6 +240,8 @@
 				F200000000000012 /* ProfileView.swift */,
 				F20000000000002B /* AddFromWebView.swift */,
 				F20000000000002C /* WardrobeItemDetailView.swift */,
+				F200000000000034 /* ChatListView.swift */,
+				F200000000000035 /* ChatThreadView.swift */,
 			);
 			path = Screens;
 			sourceTree = "<group>";
@@ -231,8 +253,18 @@
 				DD00000000000009 /* UI */,
 				DD0000000000000A /* Agent */,
 				DD0000000000000B /* Outfits */,
+				DD0000000000000E /* Chat */,
 			);
 			path = Components;
+			sourceTree = "<group>";
+		};
+		DD0000000000000E /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				F200000000000036 /* ChatBubble.swift */,
+				F200000000000037 /* ChatComposer.swift */,
+			);
+			path = Chat;
 			sourceTree = "<group>";
 		};
 		DD00000000000008 /* Icons */ = {
@@ -396,6 +428,14 @@
 				F100000000000029 /* TryOnService.swift in Sources */,
 				F10000000000002B /* AddFromWebView.swift in Sources */,
 				F10000000000002C /* WardrobeItemDetailView.swift in Sources */,
+				F100000000000030 /* Conversation.swift in Sources */,
+				F100000000000031 /* ChatAPI.swift in Sources */,
+				F100000000000032 /* ChatSocket.swift in Sources */,
+				F100000000000033 /* ChatStore.swift in Sources */,
+				F100000000000034 /* ChatListView.swift in Sources */,
+				F100000000000035 /* ChatThreadView.swift in Sources */,
+				F100000000000036 /* ChatBubble.swift in Sources */,
+				F100000000000037 /* ChatComposer.swift in Sources */,
 				F100000000000013 /* HangerIcon.swift in Sources */,
 				F100000000000014 /* HangerIconView.swift in Sources */,
 				F100000000000015 /* TShirtIconView.swift in Sources */,

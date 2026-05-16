@@ -10,7 +10,7 @@ struct MainTabView: View {
             switch selectedTab {
             case .wardrobe: WardrobeView()
             case .outfits: OutfitsView()
-            case .stylist: StyleAgentView()
+            case .stylist: ChatListView()
             }
 
             FloatingTabBar(selectedTab: $selectedTab)
