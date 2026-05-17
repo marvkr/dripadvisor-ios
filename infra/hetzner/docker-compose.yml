@@ -100,6 +100,8 @@ services:
       - "80:80"
       - "443:443"
       - "443:443/udp"
+    environment:
+      API_HOST: ${API_HOST:-api.dripadvisor.app}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddydata:/data

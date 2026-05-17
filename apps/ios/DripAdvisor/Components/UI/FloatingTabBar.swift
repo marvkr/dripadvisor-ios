@@ -26,8 +26,8 @@ struct FloatingTabBar: View {
             }
 
             tabButton(tab: .stylist) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 22))
+                Image(systemName: "bubble.left.and.bubble.right.fill")
+                    .font(.system(size: 20))
                     .foregroundStyle(selectedTab == .stylist ? Theme.iconActive : Theme.iconInactive)
                     .symbolEffect(.bounce, value: selectedTab == .stylist)
             }

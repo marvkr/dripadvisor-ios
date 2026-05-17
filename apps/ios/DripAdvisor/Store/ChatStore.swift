@@ -30,7 +30,10 @@ final class ChatStore {
                 await self.handleEnvelope(env)
             }
         }
-        Task { await refreshConversations() }
+        Task {
+            _ = try? await api.ensureStylistDirect()
+            await refreshConversations()
+        }
     }
 
     func stop() {

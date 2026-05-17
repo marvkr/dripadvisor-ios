@@ -10,7 +10,7 @@
     }
 }
 
-api.dripadvisor.app {
+{$API_HOST:api.dripadvisor.app} {
     encode zstd gzip
 
     # Long timeouts for /v1/tryon. Default Caddy proxy timeout is 30s — too

@@ -40,6 +40,15 @@ struct ChatAPI: Sendable {
         return Self.toConversation(dto)
     }
 
+    /// Idempotent — backend returns the existing direct stylist chat or creates one.
+    func ensureStylistDirect() async throws -> Conversation {
+        let dto: ChatDTO = try await client.post(
+            "/v1/chats/ensure-stylist",
+            body: Empty()
+        )
+        return Self.toConversation(dto)
+    }
+
     // MARK: messages
 
     struct MessageDTO: Decodable {

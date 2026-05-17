@@ -75,6 +75,7 @@ func NewRouter(d *Deps) http.Handler {
 		// v1.1 chat REST (no realtime yet — PR2 adds WebSocket + Redis)
 		g.Get("/v1/chats", handleListChats(d))
 		g.Post("/v1/chats", handleCreateChat(d))
+		g.Post("/v1/chats/ensure-stylist", handleEnsureStylistDirect(d))
 		g.Get("/v1/chats/{id}", handleGetChat(d))
 		g.Post("/v1/chats/{id}/participants", handleAddParticipant(d))
 		g.Delete("/v1/chats/{id}/participants/{user_id}", handleRemoveParticipant(d))

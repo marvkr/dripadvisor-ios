@@ -129,6 +129,31 @@ func handleCreateChat(d *Deps) http.HandlerFunc {
 	}
 }
 
+// handleEnsureStylistDirect creates a direct chat between the caller and the
+// stylist agent if none exists yet, otherwise returns the existing one.
+// Idempotent — safe to call on every app launch.
+func handleEnsureStylistDirect(d *Deps) http.HandlerFunc {
+	stylistID := uuid.MustParse(workers.StylistAgentID)
+	stylistName := "Stylist"
+	return func(w http.ResponseWriter, r *http.Request) {
+		uid, _ := auth.UserID(r.Context())
+		if existing, err := d.Chats.FindDirectChatWithAgent(r.Context(), uid, stylistID); err == nil {
+			writeJSON(w, http.StatusOK, toChatDTO(*existing))
+			return
+		} else if !errors.Is(err, db.ErrNotFound) {
+			writeError(w, http.StatusInternalServerError, "lookup failed")
+			return
+		}
+		c, err := d.Chats.CreateChat(r.Context(), "direct", &stylistName, uid,
+			nil, []uuid.UUID{stylistID})
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		writeJSON(w, http.StatusCreated, toChatDTO(*c))
+	}
+}
+
 func handleListChats(d *Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		uid, _ := auth.UserID(r.Context())

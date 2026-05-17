@@ -202,6 +202,27 @@ func (r *ChatRepo) IsParticipant(ctx context.Context, chatID, userID uuid.UUID) 
 	return true, role, nil
 }
 
+// FindDirectChatWithAgent returns the existing direct chat that has both the
+// user and the given agent as participants, or ErrNotFound when absent.
+func (r *ChatRepo) FindDirectChatWithAgent(ctx context.Context, userID, agentID uuid.UUID) (*Chat, error) {
+	const q = `
+SELECT c.id, c.type, c.name, c.icon_url, c.created_by, c.last_message_at,
+       c.last_message_preview, c.created_at, c.updated_at
+FROM chats c
+JOIN chat_participants pu ON pu.chat_id = c.id AND pu.user_id  = $1
+JOIN chat_participants pa ON pa.chat_id = c.id AND pa.agent_id = $2
+WHERE c.type = 'direct'
+LIMIT 1`
+	var c Chat
+	err := r.pool.QueryRow(ctx, q, userID, agentID).Scan(&c.ID, &c.Type, &c.Name,
+		&c.IconURL, &c.CreatedBy, &c.LastMessageAt, &c.LastMessagePreview,
+		&c.CreatedAt, &c.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	return &c, err
+}
+
 func (r *ChatRepo) AddParticipant(ctx context.Context, chatID, userID uuid.UUID) error {
 	_, err := r.pool.Exec(ctx,
 		`INSERT INTO chat_participants (chat_id, user_id, role) VALUES ($1, $2, 'member')`,
