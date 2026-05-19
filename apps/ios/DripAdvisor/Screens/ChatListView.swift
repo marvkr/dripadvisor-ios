@@ -5,6 +5,7 @@ import SwiftUI
 struct ChatListView: View {
     @Environment(ChatStore.self) private var store
     @State private var selectedID: UUID?
+    @State private var creating = false
 
     var body: some View {
         NavigationStack {
@@ -30,24 +31,58 @@ struct ChatListView: View {
             .navigationDestination(for: UUID.self) { id in
                 ChatThreadView(chatID: id)
             }
+            .navigationDestination(item: $selectedID) { id in
+                ChatThreadView(chatID: id)
+            }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(action: openStylist) {
+                        Image(systemName: "square.and.pencil")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(Theme.textPrimary)
+                    }
+                    .disabled(creating)
+                }
+            }
             .refreshable { await store.refreshConversations() }
         }
         .task { store.start() }
     }
 
+    private func openStylist() {
+        guard !creating else { return }
+        creating = true
+        Task {
+            if let id = await store.openOrCreateStylistChat() {
+                selectedID = id
+            }
+            creating = false
+        }
+    }
+
     private var emptyState: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "message")
+        VStack(spacing: 16) {
+            Image(systemName: "sparkles")
                 .font(.system(size: 48, weight: .ultraLight))
                 .foregroundStyle(Theme.textDisabled)
             Text("No conversations yet")
                 .font(.system(size: 18, weight: .semibold, design: .serif))
                 .foregroundStyle(Theme.textPrimary)
-            Text("Start a chat from your friends list or talk to the stylist.")
+            Text("Start a 1:1 with the AI stylist to get outfit suggestions.")
                 .font(.subheadline)
                 .foregroundStyle(Theme.textMuted)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
+            Button(action: openStylist) {
+                Label(creating ? "Opening…" : "Talk to Stylist", systemImage: "wand.and.stars")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 12)
+                    .background(Theme.buttonPrimary, in: Capsule())
+            }
+            .disabled(creating)
+            .padding(.top, 4)
         }
     }
 }

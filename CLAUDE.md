@@ -66,6 +66,11 @@ Rule of thumb: if you're about to assert a performance number, a library behavio
 
   Never report a SwiftUI change as "done" based on compile success alone. If the simulator can't be reached, say so explicitly — do not claim verification.
 
+  **Self-enforcement rule (added 2026-05-18):** every reply that delivers an iOS UI change MUST end with either:
+  - `verified-in-sim: <one-line description of what you saw>` if you ran the sim flow and the screenshot/a11y dump matches expectation, OR
+  - `NOT verified-in-sim: <reason>` if you skipped or were unable.
+  Saying nothing = lying about verification. The user has explicitly asked for this guardrail; never silently skip it.
+
 ## Codebase conventions
 
 - **SwiftUI + Swift 6 strict concurrency.** Not UIKit. Not Swift 5.

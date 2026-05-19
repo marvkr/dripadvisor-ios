@@ -3,24 +3,26 @@ import PhotosUI
 
 struct AvatarSetupView: View {
     @Environment(DripStore.self) private var store
+    @Environment(\.dripAPI) private var api
     @State private var pickerItem: PhotosPickerItem?
     @State private var previewImage: UIImage?
     @State private var isLoading = false
+    @State private var isUploading = false
 
     var body: some View {
         ZStack {
             Theme.bg.ignoresSafeArea()
 
-            VStack(spacing: 24) {
-                Spacer()
+            VStack(spacing: 16) {
                 AvatarHeader()
+                    .padding(.top, 8)
                 AvatarPreview(previewImage: previewImage, isLoading: isLoading)
+                    .frame(maxHeight: .infinity)
                 AvatarTips()
-                Spacer()
                 avatarActions
             }
-            .padding(.horizontal, 32)
-            .padding(.bottom, 40)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 16)
         }
         .task(id: pickerItem) {
             await loadImage()
@@ -58,6 +60,12 @@ struct AvatarSetupView: View {
     private func commit() {
         guard let previewImage, let data = previewImage.jpegData(compressionQuality: 0.85) else { return }
         withAnimation { store.setAvatar(data) }
+        guard let api else { return }
+        isUploading = true
+        Task {
+            try? await api.uploadAvatar(jpeg: data)
+            await MainActor.run { isUploading = false }
+        }
     }
 }
 
@@ -91,7 +99,7 @@ struct AvatarPreview: View {
             if let previewImage {
                 Image(uiImage: previewImage)
                     .resizable()
-                    .scaledToFill()
+                    .scaledToFit()
                     .clipShape(.rect(cornerRadius: 24))
             } else {
                 VStack(spacing: 16) {
@@ -110,8 +118,7 @@ struct AvatarPreview: View {
                 .clipShape(.rect(cornerRadius: 24))
             }
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 260)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .glassCard()
     }
 }

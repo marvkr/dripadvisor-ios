@@ -19,7 +19,11 @@ enum APIError: Error, LocalizedError {
 }
 
 /// Minimal HTTP client. Attaches a bearer token when provided.
-/// Base URL defaults to http://localhost:8080 for simulator dev.
+///
+/// Base URL resolution order:
+///   1. `DRIP_API_BASE` env var (lets a build target override at run time)
+///   2. `Info.plist` key `DRIP_API_BASE` (per-configuration xcconfig override)
+///   3. Compiled default: DEBUG → http://localhost:8080, RELEASE → prod
 struct APIClient: Sendable {
     let baseURL: URL
     let session: URLSession
@@ -34,8 +38,20 @@ struct APIClient: Sendable {
         return URLSession(configuration: cfg)
     }()
 
+    static var defaultBaseURL: URL {
+        if let env = ProcessInfo.processInfo.environment["DRIP_API_BASE"],
+           let url = URL(string: env) { return url }
+        if let plist = Bundle.main.object(forInfoDictionaryKey: "DRIP_API_BASE") as? String,
+           let url = URL(string: plist) { return url }
+        #if DEBUG
+        return URL(string: "http://localhost:8080")!
+        #else
+        return URL(string: "https://api.5-78-141-236.sslip.io")!
+        #endif
+    }
+
     init(
-        baseURL: URL = URL(string: "http://localhost:8080")!,
+        baseURL: URL = APIClient.defaultBaseURL,
         session: URLSession? = nil,
         tokenProvider: @escaping @Sendable () -> String? = { nil }
     ) {

@@ -36,6 +36,10 @@ struct DripAdvisorApp: App {
                         if let remote = try? await sync.pullLatest() {
                             store.hydrateWardrobe(from: remote)
                         }
+                        if store.profile.avatarData == nil,
+                           let bytes = try? await api.fetchAvatar() {
+                            store.setAvatar(bytes)
+                        }
                         chat.start()
                     } else {
                         store.sync = nil

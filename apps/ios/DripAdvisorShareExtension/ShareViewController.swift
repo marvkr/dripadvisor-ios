@@ -69,7 +69,7 @@ final class ShareViewController: UIViewController {
         return payload
     }
 
-    private func loadItem<T>(_ provider: NSItemProvider, type: String) async throws -> T? {
+    private func loadItem<T: Sendable>(_ provider: NSItemProvider, type: String) async throws -> T? {
         try await withCheckedThrowingContinuation { cont in
             provider.loadItem(forTypeIdentifier: type, options: nil) { data, error in
                 if let error { cont.resume(throwing: error); return }

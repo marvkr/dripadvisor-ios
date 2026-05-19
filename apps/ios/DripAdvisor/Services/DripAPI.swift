@@ -152,4 +152,91 @@ struct DripAPI: Sendable {
     func createOutfit(_ req: CreateOutfitRequest) async throws -> OutfitDTO {
         try await client.post("/v1/outfits", body: req)
     }
+
+    // MARK: Garment analysis (auto-fill)
+
+    struct GarmentAnalysisDTO: Decodable, Sendable {
+        let name: String
+        let brand: String
+        let category: String
+        let colorPrimary: String
+        let tags: [String]
+    }
+
+    /// Sends the BG-removed garment image to Gemini Vision via backend.
+    /// Returns best-effort {name, brand, category, color, tags} — user edits later if wrong.
+    func analyzeGarment(jpeg: Data) async throws -> GarmentAnalysisDTO {
+        let boundary = "DripBoundary-\(UUID().uuidString)"
+        guard let url = URL(string: "/v1/wardrobe/analyze", relativeTo: client.baseURL) else {
+            throw APIError.badURL
+        }
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        if let tok = client.tokenProvider() {
+            req.setValue("Bearer \(tok)", forHTTPHeaderField: "Authorization")
+        }
+        req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        var body = Data()
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"garment.jpg\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        body.append(jpeg)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        req.httpBody = body
+
+        let (data, resp) = try await client.session.data(for: req)
+        guard let http = resp as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
+            throw APIError.badResponse(status: code, body: String(data: data, encoding: .utf8) ?? "")
+        }
+        return try JSONDecoder.api.decode(GarmentAnalysisDTO.self, from: data)
+    }
+
+    // MARK: Avatar
+
+    /// Uploads the user's body reference photo as multipart/form-data.
+    /// Backend stores in S3 at avatars/{user_id}.jpg.
+    func uploadAvatar(jpeg: Data) async throws {
+        let boundary = "DripBoundary-\(UUID().uuidString)"
+        guard let url = URL(string: "/v1/me/avatar", relativeTo: client.baseURL) else {
+            throw APIError.badURL
+        }
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        if let tok = client.tokenProvider() {
+            req.setValue("Bearer \(tok)", forHTTPHeaderField: "Authorization")
+        }
+        req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        var body = Data()
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"avatar.jpg\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        body.append(jpeg)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        req.httpBody = body
+
+        let (data, resp) = try await client.session.data(for: req)
+        guard let http = resp as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
+            throw APIError.badResponse(status: code, body: String(data: data, encoding: .utf8) ?? "")
+        }
+    }
+
+    /// Streams the user's avatar bytes. Returns nil on 404.
+    func fetchAvatar() async throws -> Data? {
+        guard let url = URL(string: "/v1/me/avatar", relativeTo: client.baseURL) else {
+            throw APIError.badURL
+        }
+        var req = URLRequest(url: url)
+        if let tok = client.tokenProvider() {
+            req.setValue("Bearer \(tok)", forHTTPHeaderField: "Authorization")
+        }
+        let (data, resp) = try await client.session.data(for: req)
+        guard let http = resp as? HTTPURLResponse else { return nil }
+        if http.statusCode == 404 { return nil }
+        guard (200..<300).contains(http.statusCode) else {
+            throw APIError.badResponse(status: http.statusCode, body: "")
+        }
+        return data
+    }
 }

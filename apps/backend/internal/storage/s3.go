@@ -55,6 +55,22 @@ func (c *Client) Put(ctx context.Context, key string, body io.Reader, contentTyp
 	return err
 }
 
+// Get returns a stream for an object key. Caller must Close the body.
+func (c *Client) Get(ctx context.Context, key string) (io.ReadCloser, string, error) {
+	out, err := c.s3.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(c.bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return nil, "", err
+	}
+	ct := ""
+	if out.ContentType != nil {
+		ct = *out.ContentType
+	}
+	return out.Body, ct, nil
+}
+
 // PublicURL returns a path-style URL for the given key (for MinIO local dev / R2 when bucket is public).
 func (c *Client) PublicURL(key string) string {
 	return fmt.Sprintf("%s/%s/%s", c.endpoint, c.bucket, key)

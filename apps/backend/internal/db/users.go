@@ -43,6 +43,13 @@ RETURNING id, apple_sub, email, username, display_name, avatar_url, account_tier
 	return scanUser(row)
 }
 
+func (r *UserRepo) SetAvatarURL(ctx context.Context, id uuid.UUID, url string) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE users SET avatar_url = $2, updated_at = now() WHERE id = $1`,
+		id, url)
+	return err
+}
+
 func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*User, error) {
 	const q = `
 SELECT id, apple_sub, email, username, display_name, avatar_url, account_tier, pro_expires_at, onboarded_at, created_at

@@ -4,6 +4,7 @@ import PhotosUI
 struct AddWardrobeItemView: View {
     @Environment(DripStore.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dripAPI) private var api
 
     @State private var pickerItem: PhotosPickerItem?
     @State private var imageData: Data?
@@ -13,9 +14,10 @@ struct AddWardrobeItemView: View {
     @State private var category: GarmentCategory = .top
     @State private var isExtracting = false
     @State private var hasExtracted = false
+    @State private var isAnalyzing = false
 
     private var canSave: Bool {
-        imageData != nil && !name.isEmpty && !brand.isEmpty
+        imageData != nil && !name.isEmpty
     }
 
     var body: some View {
@@ -27,7 +29,7 @@ struct AddWardrobeItemView: View {
                         AddItemPhotoSection(
                             previewImage: previewImage,
                             hasExtracted: hasExtracted,
-                            isExtracting: isExtracting,
+                            isExtracting: isExtracting || isAnalyzing,
                             pickerItem: $pickerItem
                         )
                         AddItemFormSection(name: $name, brand: $brand, category: $category)
@@ -81,6 +83,18 @@ struct AddWardrobeItemView: View {
             previewImage = rawImage
             hasExtracted = false
         }
+        await autofillFromAnalysis()
+    }
+
+    @MainActor
+    private func autofillFromAnalysis() async {
+        guard let api, let imageData else { return }
+        isAnalyzing = true
+        defer { isAnalyzing = false }
+        guard let dto = try? await api.analyzeGarment(jpeg: imageData) else { return }
+        if name.isEmpty { name = dto.name }
+        if brand.isEmpty { brand = dto.brand }
+        if let cat = GarmentCategory(rawValue: dto.category) { category = cat }
     }
 
     private func save() {

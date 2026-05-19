@@ -179,8 +179,8 @@ struct WardrobeFAB: View {
 
     var body: some View {
         Menu {
-            Button("From closet", systemImage: "camera", action: onCloset)
-            Button("From web", systemImage: "link", action: onWeb)
+            Button("From closet", systemImage: "camera") { pulse.toggle(); onCloset() }
+            Button("From web", systemImage: "link") { pulse.toggle(); onWeb() }
         } label: {
             Image(systemName: "plus")
                 .font(.system(size: 28))
@@ -195,7 +195,6 @@ struct WardrobeFAB: View {
                 )
                 .shadow(color: .black.opacity(0.1), radius: 8, y: 0)
         }
-        .simultaneousGesture(TapGesture().onEnded { pulse.toggle() })
         .padding(.trailing, 20)
         .padding(.bottom, 60)
     }

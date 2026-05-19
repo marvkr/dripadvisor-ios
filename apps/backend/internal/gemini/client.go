@@ -3,12 +3,15 @@ package gemini
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 
 	"google.golang.org/genai"
 )
+
+func jsonUnmarshal(b []byte, v any) error { return json.Unmarshal(b, v) }
 
 // Model identifiers — locked in the grill. Never swap to Seedream/Flux.
 const (
@@ -109,6 +112,70 @@ func extractImage(resp *genai.GenerateContentResponse) ([]byte, error) {
 		}
 	}
 	return nil, errors.New("gemini: response had no image part")
+}
+
+// GarmentAnalysis is the structured output we ask Gemini to return for a
+// single garment photo. All fields are best-effort; the user can edit later.
+type GarmentAnalysis struct {
+	Name         string   `json:"name"`
+	Brand        string   `json:"brand"`
+	Category     string   `json:"category"` // matches GarmentCategory enum on the iOS side
+	ColorPrimary string   `json:"color_primary"`
+	Tags         []string `json:"tags"`
+}
+
+// AnalyzeGarment asks Gemini Flash (vision) to classify a garment photo and
+// return structured fields so we can pre-fill the wardrobe form. The user
+// can correct anything wrong from the detail view later.
+func (c *Client) AnalyzeGarment(ctx context.Context, img ReferenceImage) (*GarmentAnalysis, error) {
+	const prompt = `Look at this single garment photo and return a JSON object describing it.
+
+Schema:
+{
+  "name":          string — short, neutral product name (e.g., "Blue Oxford Shirt", "Black Denim Jacket"). Max 40 chars.
+  "brand":         string — visible brand on the garment, or "" if unknown. Never guess. Max 30 chars.
+  "category":      one of "top", "bottom", "outer", "dress", "shoes", "accessory", "bag"
+  "color_primary": dominant color word, lowercased (e.g., "blue", "off-white", "olive")
+  "tags":          array of 1-4 short tags about style/fit (e.g., "casual", "long-sleeve", "linen")
+}
+
+Return ONLY the JSON object, no prose.`
+
+	parts := []*genai.Part{
+		genai.NewPartFromText(prompt),
+		{InlineData: &genai.Blob{MIMEType: img.MIMEType, Data: img.Data}},
+	}
+	contents := []*genai.Content{genai.NewContentFromParts(parts, genai.RoleUser)}
+
+	cfg := &genai.GenerateContentConfig{
+		ResponseMIMEType: "application/json",
+	}
+	resp, err := c.c.Models.GenerateContent(ctx, "gemini-2.5-flash", contents, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("gemini analyze: %w", err)
+	}
+	text := extractText(resp)
+	if text == "" {
+		return nil, errors.New("gemini: empty analysis response")
+	}
+	out := &GarmentAnalysis{}
+	if err := jsonUnmarshal([]byte(text), out); err != nil {
+		return nil, fmt.Errorf("gemini analysis parse: %w (raw: %s)", err, text)
+	}
+	return out, nil
+}
+
+func extractText(resp *genai.GenerateContentResponse) string {
+	if resp == nil || len(resp.Candidates) == 0 {
+		return ""
+	}
+	var b bytes.Buffer
+	for _, p := range resp.Candidates[0].Content.Parts {
+		if p.Text != "" {
+			b.WriteString(p.Text)
+		}
+	}
+	return b.String()
 }
 
 // FetchGarment downloads a garment PNG from object storage and wraps it.

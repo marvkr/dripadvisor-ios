@@ -36,6 +36,19 @@ final class ChatStore {
         }
     }
 
+    /// Idempotent — returns existing stylist chat id or creates one.
+    /// Refreshes the conversation list so the new row shows up immediately.
+    func openOrCreateStylistChat() async -> UUID? {
+        do {
+            let chat = try await api.ensureStylistDirect()
+            await refreshConversations()
+            return chat.id
+        } catch {
+            self.error = error.localizedDescription
+            return nil
+        }
+    }
+
     func stop() {
         socket.disconnect()
         socketDrainTask?.cancel()
