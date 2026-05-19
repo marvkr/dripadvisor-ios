@@ -4,11 +4,12 @@ import SwiftUI
 /// preview, time, unread dot.
 struct ChatListView: View {
     @Environment(ChatStore.self) private var store
-    @State private var selectedID: UUID?
+    @State private var path: [UUID] = []
     @State private var creating = false
+    @State private var lastError: String?
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             ZStack {
                 Theme.bg.ignoresSafeArea()
                 if store.conversations.isEmpty && store.loading {
@@ -16,7 +17,7 @@ struct ChatListView: View {
                 } else if store.conversations.isEmpty {
                     emptyState
                 } else {
-                    List(store.conversations, selection: $selectedID) { c in
+                    List(store.conversations) { c in
                         NavigationLink(value: c.id) {
                             ConversationRow(conversation: c)
                         }
@@ -31,9 +32,6 @@ struct ChatListView: View {
             .navigationDestination(for: UUID.self) { id in
                 ChatThreadView(chatID: id)
             }
-            .navigationDestination(item: $selectedID) { id in
-                ChatThreadView(chatID: id)
-            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: openStylist) {
@@ -43,6 +41,14 @@ struct ChatListView: View {
                     }
                     .disabled(creating)
                 }
+            }
+            .alert("Couldn't open chat", isPresented: .init(
+                get: { lastError != nil },
+                set: { if !$0 { lastError = nil } }
+            )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(lastError ?? "")
             }
             .refreshable { await store.refreshConversations() }
         }
@@ -54,7 +60,9 @@ struct ChatListView: View {
         creating = true
         Task {
             if let id = await store.openOrCreateStylistChat() {
-                selectedID = id
+                path.append(id)
+            } else {
+                lastError = store.error ?? "Backend did not return a chat. Check connection."
             }
             creating = false
         }

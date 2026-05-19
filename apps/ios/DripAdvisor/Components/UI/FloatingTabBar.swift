@@ -26,10 +26,12 @@ struct FloatingTabBar: View {
             }
 
             tabButton(tab: .stylist) {
-                Image(systemName: "bubble.left.and.bubble.right.fill")
-                    .font(.system(size: 20))
+                Image("ChatBot")
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 19, height: 19)
                     .foregroundStyle(selectedTab == .stylist ? Theme.iconActive : Theme.iconInactive)
-                    .symbolEffect(.bounce, value: selectedTab == .stylist)
             }
         }
         .padding(.horizontal, 12)

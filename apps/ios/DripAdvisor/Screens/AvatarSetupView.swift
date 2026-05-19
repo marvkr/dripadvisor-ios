@@ -17,7 +17,6 @@ struct AvatarSetupView: View {
                 AvatarHeader()
                     .padding(.top, 8)
                 AvatarPreview(previewImage: previewImage, isLoading: isLoading)
-                    .frame(maxHeight: .infinity)
                 AvatarTips()
                 avatarActions
             }
@@ -95,31 +94,39 @@ struct AvatarPreview: View {
     let isLoading: Bool
 
     var body: some View {
-        ZStack {
-            if let previewImage {
-                Image(uiImage: previewImage)
-                    .resizable()
-                    .scaledToFit()
-                    .clipShape(.rect(cornerRadius: 24))
-            } else {
+        if let previewImage {
+            Image(uiImage: previewImage)
+                .resizable()
+                .scaledToFit()
+                .cornerRadius(24)
+                .overlay(alignment: .center) {
+                    if isLoading {
+                        ZStack {
+                            Color.black.opacity(0.3)
+                            ProgressView().tint(.white)
+                        }
+                        .clipShape(RoundedRectangle(cornerRadius: 24))
+                    }
+                }
+        } else {
+            ZStack {
                 VStack(spacing: 16) {
                     UserPositionIcon(size: 80, color: Theme.textDisabled)
                     Text("Full-body photo")
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(Theme.textMuted)
                 }
-            }
-
-            if isLoading {
-                ZStack {
-                    Color.black.opacity(0.3)
-                    ProgressView().tint(.white)
+                if isLoading {
+                    ZStack {
+                        Color.black.opacity(0.3)
+                        ProgressView().tint(.white)
+                    }
+                    .clipShape(.rect(cornerRadius: 24))
                 }
-                .clipShape(.rect(cornerRadius: 24))
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .glassCard()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .glassCard()
     }
 }
 
