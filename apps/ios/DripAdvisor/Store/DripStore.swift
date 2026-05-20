@@ -14,6 +14,18 @@ final class DripStore {
         )
     ]
     var isOnboarded: Bool { profile.avatarData != nil }
+
+#if DEBUG
+    /// Populates the wardrobe + outfits with demo data on first launch in
+    /// DEBUG builds so the wardrobe → try-on → outfit flow is exercisable
+    /// without going through onboarding + a real Gemini round-trip.
+    func loadDemoSeedIfEmpty() {
+        guard wardrobe.isEmpty, outfits.isEmpty else { return }
+        let (w, o) = SeedData.build()
+        wardrobe = w
+        outfits = o
+    }
+#endif
     var isStylistThinking: Bool = false
 
     /// Optional backend sync bridge. When non-nil, wardrobe inserts are pushed

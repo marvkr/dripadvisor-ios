@@ -12,6 +12,9 @@ struct DripAdvisorApp: App {
     init() {
         let a = AuthStore()
         _auth = State(initialValue: a)
+#if DEBUG
+        _store.wrappedValue.loadDemoSeedIfEmpty()
+#endif
         // Single long-lived APIClient. Its tokenProvider closure reads the
         // current auth.session lazily, so there's no need to rebuild after login.
         let client = APIClient(tokenProvider: a.tokenProvider)

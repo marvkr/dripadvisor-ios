@@ -17,6 +17,7 @@ import (
 	"github.com/dripadvisor/backend/internal/gemini"
 	"github.com/dripadvisor/backend/internal/httpapi"
 	"github.com/dripadvisor/backend/internal/realtime"
+	"github.com/dripadvisor/backend/internal/scrape"
 	"github.com/dripadvisor/backend/internal/storage"
 	"github.com/dripadvisor/backend/internal/workers"
 )
@@ -118,6 +119,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	var camofox *scrape.Camofox
+	if cfg.CamofoxURL != "" {
+		camofox = scrape.NewCamofox(cfg.CamofoxURL)
+		if camofox.Available(ctx) {
+			slog.Info("camofox available", "url", cfg.CamofoxURL)
+		} else {
+			slog.Warn("camofox configured but unreachable", "url", cfg.CamofoxURL)
+		}
+	}
+
 	deps := &httpapi.Deps{
 		Users:    db.NewUserRepo(pool),
 		Wardrobe: wardrobeRepo,
@@ -127,6 +138,7 @@ func main() {
 		Apple:    auth.NewAppleVerifier(cfg.AppleBundleID),
 		Signer:   auth.NewSigner(cfg.JWTSigningSecret, cfg.SessionTTLHours),
 		Gemini:   geminiClient,
+		Camofox:  camofox,
 		Storage:  store,
 		Realtime: rdb,
 		Gateway:  gateway,

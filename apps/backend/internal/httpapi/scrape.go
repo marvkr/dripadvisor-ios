@@ -33,7 +33,7 @@ type scrapeResp struct {
 	SourceURL   string   `json:"source_url"`
 }
 
-func handleScrapeWardrobe(_ *Deps) http.HandlerFunc {
+func handleScrapeWardrobe(d *Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req scrapeReq
 		if err := json.NewDecoder(io.LimitReader(r.Body, 4096)).Decode(&req); err != nil {
@@ -45,15 +45,42 @@ func handleScrapeWardrobe(_ *Deps) http.HandlerFunc {
 			writeError(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
+		ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 		defer cancel()
 
-		body, err := fetchPage(ctx, u.String())
-		if err != nil {
-			writeError(w, http.StatusBadGateway, "fetch failed")
-			return
+		// Try naive fetch first — cheap, works on Shopify/boutiques.
+		var resp scrapeResp
+		if body, err := fetchPage(ctx, u.String()); err == nil {
+			resp = parseProduct(body)
 		}
-		resp := parseProduct(body)
+
+		// Fall back to Camofox when naive returned thin data. Handles
+		// Lulu/Zara/Nike + Cloudflare-fronted JS-heavy ecom.
+		if d.Camofox != nil && (resp.Name == nil || resp.ImageURL == nil) {
+			if p, perr := d.Camofox.ScrapeProduct(ctx, u.String()); perr == nil {
+				if resp.Name == nil && p.Name != "" {
+					n := p.Name
+					resp.Name = &n
+				}
+				if resp.Brand == nil && p.Brand != "" {
+					b := p.Brand
+					resp.Brand = &b
+				}
+				if resp.ImageURL == nil && p.ImageURL != "" {
+					img := p.ImageURL
+					resp.ImageURL = &img
+				}
+				if resp.RetailPrice == nil && p.RetailPrice > 0 {
+					price := p.RetailPrice
+					resp.RetailPrice = &price
+				}
+				if resp.Currency == nil && p.Currency != "" {
+					c := p.Currency
+					resp.Currency = &c
+				}
+			}
+		}
+
 		resp.SourceURL = u.String()
 		writeJSON(w, http.StatusOK, resp)
 	}

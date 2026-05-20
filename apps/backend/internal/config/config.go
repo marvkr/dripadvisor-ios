@@ -23,6 +23,7 @@ type Config struct {
 	AppleTeamID        string
 	SessionTTLHours    int
 	GeminiAPIKey       string
+	CamofoxURL         string
 	FreeTryOnsPerWeek  int
 	FreeStylistPerWeek int
 }
@@ -44,6 +45,7 @@ func Load() (*Config, error) {
 		AppleTeamID:        env("APPLE_TEAM_ID", ""),
 		SessionTTLHours:    envInt("SESSION_TTL_HOURS", 720),
 		GeminiAPIKey:       env("GEMINI_API_KEY", ""),
+		CamofoxURL:         env("CAMOFOX_URL", ""),
 		FreeTryOnsPerWeek:  envInt("FREE_TRYONS_PER_WEEK", 3),
 		FreeStylistPerWeek: envInt("FREE_STYLIST_REPLIES_PER_WEEK", 2),
 	}

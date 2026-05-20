@@ -82,6 +82,9 @@ services:
       APPLE_TEAM_ID: ${APPLE_TEAM_ID}
       SESSION_TTL_HOURS: "${SESSION_TTL_HOURS:-720}"
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+      CAMOFOX_URL: ${CAMOFOX_URL:-http://host.docker.internal:9377}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks: [dripnet]
     healthcheck:
       test: ["CMD", "/server", "--healthcheck"]

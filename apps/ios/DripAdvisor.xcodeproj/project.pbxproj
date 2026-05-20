@@ -54,6 +54,7 @@
 		F100000000000035 /* ChatThreadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000035; };
 		F100000000000036 /* ChatBubble.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000036; };
 		F100000000000040 /* StickerImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000040; };
+		F100000000000041 /* SeedData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000041; };
 		F100000000000037 /* ChatComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000037; };
 		F100000000000020 /* BackgroundRemover.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000020; };
 		F100000000000021 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000021; };
@@ -119,6 +120,7 @@
 		F200000000000035 /* ChatThreadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatThreadView.swift; sourceTree = "<group>"; };
 		F200000000000036 /* ChatBubble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatBubble.swift; sourceTree = "<group>"; };
 		F200000000000040 /* StickerImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerImage.swift; sourceTree = "<group>"; };
+		F200000000000041 /* SeedData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedData.swift; sourceTree = "<group>"; };
 		F200000000000037 /* ChatComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatComposer.swift; sourceTree = "<group>"; };
 		F200000000000020 /* BackgroundRemover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundRemover.swift; sourceTree = "<group>"; };
 		F200000000000021 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
@@ -246,6 +248,7 @@
 			children = (
 				F200000000000007 /* DripStore.swift */,
 				F200000000000033 /* ChatStore.swift */,
+				F200000000000041 /* SeedData.swift */,
 			);
 			path = Store;
 			sourceTree = "<group>";
@@ -501,6 +504,7 @@
 				F100000000000016 /* UserPositionIcon.swift in Sources */,
 				F100000000000017 /* FloatingTabBar.swift in Sources */,
 				F100000000000040 /* StickerImage.swift in Sources */,
+				F100000000000041 /* SeedData.swift in Sources */,
 				F100000000000018 /* MessageBubble.swift in Sources */,
 				F100000000000019 /* StylistTypingIndicator.swift in Sources */,
 				F10000000000001A /* WardrobeItemCard.swift in Sources */,

@@ -20,6 +20,7 @@ import (
 	"github.com/dripadvisor/backend/internal/db"
 	"github.com/dripadvisor/backend/internal/gemini"
 	"github.com/dripadvisor/backend/internal/realtime"
+	"github.com/dripadvisor/backend/internal/scrape"
 	"github.com/dripadvisor/backend/internal/storage"
 )
 
@@ -32,6 +33,7 @@ type Deps struct {
 	Apple    *auth.AppleVerifier
 	Signer   *auth.Signer
 	Gemini   *gemini.Client // optional; nil disables /v1/tryon
+	Camofox  *scrape.Camofox // optional; nil falls back to naive scrape
 	Storage  *storage.Client
 	Realtime *realtime.Redis        // optional; nil disables /v1/ws + chat fan-out
 	Gateway  *realtime.Gateway      // optional; nil disables /v1/ws
