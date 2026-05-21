@@ -1,31 +1,17 @@
-# Production docker-compose for the single Hetzner box.
-# Differences from infra/docker-compose.yml (local dev):
-#   - backend service runs the Go binary in a distroless container
-#   - postgres / redis / minio bound to internal network only (no host ports)
-#   - caddy in front for TLS + reverse proxy on :443
-#   - all services restart=unless-stopped, healthchecks tightened
+# Production docker-compose for the Hetzner box.
+# Postgres → Neon (serverless), object storage → Cloudflare R2.
+# Box only runs: redis (chat fan-out + rate limits), backend, caddy, riverui, camoufox (on host).
+#
+# Differences from infra/docker-compose.yml (local dev which still uses docker pg + minio):
+#   - backend runs distroless container, talks to Neon over TLS + R2 over HTTPS
+#   - redis stays local (no managed dep yet; Upstash is the v2 swap)
+#   - caddy fronts TLS on :443
 #
 # Run on the box:
 #   cd /opt/dripadvisor
 #   docker compose -f infra/hetzner/docker-compose.yml --env-file /etc/dripadvisor/env up -d --build
 
 services:
-  postgres:
-    image: postgres:17-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${PG_USER:-dripadvisor}
-      POSTGRES_PASSWORD: ${PG_PASSWORD}
-      POSTGRES_DB: ${PG_DB:-dripadvisor}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks: [dripnet]
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-dripadvisor} -d ${PG_DB:-dripadvisor}"]
-      interval: 5s
-      timeout: 5s
-      retries: 30
-
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -39,22 +25,6 @@ services:
       timeout: 5s
       retries: 30
 
-  minio:
-    image: minio/minio:latest
-    restart: unless-stopped
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${S3_ACCESS_KEY}
-      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
-    volumes:
-      - miniodata:/data
-    networks: [dripnet]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 10s
-      timeout: 5s
-      retries: 30
-
   backend:
     build:
       context: ../..                  # repo root, so apps/backend is reachable
@@ -63,20 +33,21 @@ services:
         VERSION: ${VERSION:-dev}
     restart: unless-stopped
     depends_on:
-      postgres: { condition: service_healthy }
-      redis:    { condition: service_healthy }
-      minio:    { condition: service_healthy }
+      redis: { condition: service_healthy }
     environment:
       ENV: prod
       HTTP_ADDR: ":8080"
-      DATABASE_URL: postgres://${PG_USER:-dripadvisor}:${PG_PASSWORD}@postgres:5432/${PG_DB:-dripadvisor}?sslmode=disable
+      # Neon connection string. Includes ?sslmode=require + channel binding.
+      DATABASE_URL: ${DATABASE_URL}
       REDIS_ADDR: redis:6379
-      S3_ENDPOINT: http://minio:9000
+      # Cloudflare R2 (S3-compatible). Endpoint = https://<account-id>.r2.cloudflarestorage.com
+      S3_ENDPOINT: ${S3_ENDPOINT}
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
       S3_BUCKET: ${S3_BUCKET:-dripadvisor-prod}
-      S3_REGION: ${S3_REGION:-us-east-1}
-      S3_USE_PATH_STYLE: "true"
+      S3_REGION: ${S3_REGION:-auto}
+      # R2 uses virtual-hosted-style URLs, not path-style.
+      S3_USE_PATH_STYLE: "false"
       JWT_SIGNING_SECRET: ${JWT_SIGNING_SECRET}
       APPLE_BUNDLE_ID: ${APPLE_BUNDLE_ID:-com.dripadvisor.DripAdvisor}
       APPLE_TEAM_ID: ${APPLE_TEAM_ID}
@@ -103,11 +74,9 @@ services:
     image: ghcr.io/riverqueue/riverui:latest
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgres://${PG_USER:-dripadvisor}:${PG_PASSWORD}@postgres:5432/${PG_DB:-dripadvisor}?sslmode=disable
+      DATABASE_URL: ${DATABASE_URL}
     ports:
       - "127.0.0.1:8085:8080"
-    depends_on:
-      postgres: { condition: service_healthy }
     networks: [dripnet]
 
   caddy:
@@ -132,8 +101,6 @@ networks:
     driver: bridge
 
 volumes:
-  pgdata:
   redisdata:
-  miniodata:
   caddydata:
   caddyconfig:

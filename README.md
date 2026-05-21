@@ -40,8 +40,8 @@ External sharing carries a watermark. Outfits carry a "Remix" deep link — tapp
 ## Stack
 
 - **iOS** — SwiftUI, Swift 6, `@Observable` store, SwiftData + CloudKit private DB for body reference photos (never leave device except transiently during try-on).
-- **Backend** — Go + Postgres + Redis **co-located on a single Hetzner VPS**. Starts on CCX13 (~€12.50/mo); upgrade path within VPS-land goes CCX13 → CCX23 (~€25/mo) → CCX43 (~€75/mo) → AX162-R dedicated (~€400/mo, 96 cores / 1TB RAM) — sufficient for millions of DAU. Systemd-managed, UptimeRobot + Better Stack monitoring, nightly `pg_dump` cron to Cloudflare R2 with monthly restore drills.
-- **Database** — Postgres (self-hosted on the Hetzner box). All string columns use `TEXT` + `CHECK` constraints, never `VARCHAR(n)`.
+- **Backend** — Go on a single Hetzner VPS, Redis co-located. Starts on CCX13 (~€12.50/mo); upgrade path within VPS-land goes CCX13 → CCX23 (~€25/mo) → CCX43 (~€75/mo) → AX162-R dedicated (~€400/mo). Systemd-managed, UptimeRobot + Better Stack monitoring.
+- **Database** — Postgres on Neon (serverless, eu-central, free tier → Scale plan as we grow). Backup + branching handled by Neon. All string columns use `TEXT` + `CHECK` constraints, never `VARCHAR(n)`. Locked 2026-05-21: was self-hosted on the Hetzner box, swapped to Neon for managed backups, branching, and pooler-bounded connection count when the backend goes multi-replica.
 - **Cache / Realtime** — Redis (self-hosted on the same box). AOF `fsync everysec` + RDB snapshots every 5 min. Holds per-chat sequence numbers via `INCR`, pub/sub fan-out keyed by `user:{id}`, typing-indicator TTL.
 - **Job queue** — River (Postgres-backed) for all durable jobs (`extract_garment`, `ingest_bookmark`, `compose_outfit`, `stylist_reply`, `push_send`, `aged_message_purge`). Raw Redis `PUBLISH` for chat fan-out + typing indicators (ephemeral). Same durable-vs-fast split as Slack (Kafka + Redis), scaled down.
 - **Object storage** — Cloudflare R2 (zero egress). Stores wardrobe item PNGs, outfit composites. **Never stores body reference photos.**
@@ -274,7 +274,7 @@ reactions (
 
 ### Never-use / avoid list
 - **Supabase** — not used or recommended anywhere.
-- **Managed Postgres / Redis as default** (Neon, Upstash, RDS, Aurora, etc.) — we run Postgres + Redis on the same Hetzner VPS as the Go server. See `writeup.md`.
+- **Self-hosted Postgres as default** — Postgres lives on Neon (managed) for backups, branching, and pooler-bounded connection count. Redis still co-located on the Hetzner box. Upstash is the v2 swap if/when we need multi-region Redis.
 - **`VARCHAR(n)`** — not used. `TEXT` + `CHECK` everywhere.
 - **Seedream / Flux for image gen** — we use Gemini Nano Banana family exclusively.
 - **S3 for body photos** — body reference photos never leave the device except transiently.
