@@ -44,7 +44,7 @@ type tryOnResp struct {
 	GeneratedAt  time.Time `json:"generated_at"`
 }
 
-// handleTryOn POST /v1/tryon — synchronous compositing.
+// handleTryOn POST /tryon — synchronous compositing.
 func handleTryOn(d *Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		uid, ok := auth.UserID(r.Context())

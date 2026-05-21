@@ -86,11 +86,11 @@ func main() {
 	if cfg.GeminiAPIKey != "" {
 		geminiClient, err = gemini.New(ctx, cfg.GeminiAPIKey)
 		if err != nil {
-			slog.Warn("gemini init failed; /v1/tryon disabled", "err", err.Error())
+			slog.Warn("gemini init failed; /tryon disabled", "err", err.Error())
 			geminiClient = nil
 		}
 	} else {
-		slog.Warn("GEMINI_API_KEY not set; /v1/tryon disabled")
+		slog.Warn("GEMINI_API_KEY not set; /tryon disabled")
 	}
 
 	var stylist *gemini.Stylist
@@ -142,6 +142,7 @@ func main() {
 		Storage:  store,
 		Realtime: rdb,
 		Gateway:  gateway,
+		DevAuth:  cfg.Env == "dev",
 	}
 
 	srv := &http.Server{
@@ -149,7 +150,7 @@ func main() {
 		Handler:           httpapi.NewRouter(deps),
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       45 * time.Second,
-		WriteTimeout:      120 * time.Second, // /v1/tryon Gemini call can run ~30–90s
+		WriteTimeout:      120 * time.Second, // /tryon Gemini call can run ~30–90s
 		IdleTimeout:       120 * time.Second,
 	}
 

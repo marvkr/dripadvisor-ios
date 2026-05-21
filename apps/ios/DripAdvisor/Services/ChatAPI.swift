@@ -21,7 +21,7 @@ struct ChatAPI: Sendable {
     struct ChatsResponse: Decodable { let chats: [ChatDTO] }
 
     func listChats() async throws -> [Conversation] {
-        let resp: ChatsResponse = try await client.get("/v1/chats")
+        let resp: ChatsResponse = try await client.get("/chats")
         return resp.chats.map(Self.toConversation)
     }
 
@@ -34,7 +34,7 @@ struct ChatAPI: Sendable {
 
     func createChat(type: ConversationType, name: String?, participants: [UUID], agents: [UUID] = []) async throws -> Conversation {
         let dto: ChatDTO = try await client.post(
-            "/v1/chats",
+            "/chats",
             body: CreateChatRequest(type: type.rawValue, name: name, participantIds: participants, agentIds: agents.isEmpty ? nil : agents)
         )
         return Self.toConversation(dto)
@@ -43,7 +43,7 @@ struct ChatAPI: Sendable {
     /// Idempotent — backend returns the existing direct stylist chat or creates one.
     func ensureStylistDirect() async throws -> Conversation {
         let dto: ChatDTO = try await client.post(
-            "/v1/chats/ensure-stylist",
+            "/chats/ensure-stylist",
             body: Empty()
         )
         return Self.toConversation(dto)
@@ -73,7 +73,7 @@ struct ChatAPI: Sendable {
 
     func listMessages(chatID: UUID, afterSeq: Int64 = 0, limit: Int = 50) async throws -> [ConversationMessage] {
         let resp: MessagesResponse = try await client.get(
-            "/v1/chats/\(chatID.uuidString.lowercased())/messages?after_seq=\(afterSeq)&limit=\(limit)"
+            "/chats/\(chatID.uuidString.lowercased())/messages?after_seq=\(afterSeq)&limit=\(limit)"
         )
         return resp.messages.map(Self.toMessage)
     }
@@ -87,7 +87,7 @@ struct ChatAPI: Sendable {
 
     func sendMessage(chatID: UUID, body: String) async throws -> ConversationMessage {
         let dto: MessageDTO = try await client.post(
-            "/v1/chats/\(chatID.uuidString.lowercased())/messages",
+            "/chats/\(chatID.uuidString.lowercased())/messages",
             body: SendMessageRequest(body: body, attachmentType: nil, attachmentId: nil, replyToId: nil)
         )
         return Self.toMessage(dto)
@@ -99,7 +99,7 @@ struct ChatAPI: Sendable {
 
     func setRead(chatID: UUID, seq: Int64) async throws {
         let _: Empty = try await client.post(
-            "/v1/chats/\(chatID.uuidString.lowercased())/read",
+            "/chats/\(chatID.uuidString.lowercased())/read",
             body: ReadRequest(seq: seq)
         )
     }

@@ -153,8 +153,16 @@ struct AddFromWebView: View {
                 if let n = resp.name { name = n }
                 if let b = resp.brand { brand = b }
                 if let imgURL = resp.imageUrl.flatMap(URL.init(string:)) {
-                    let (data, _) = try await URLSession.shared.data(from: imgURL)
-                    imageData = data
+                    let (raw, _) = try await URLSession.shared.data(from: imgURL)
+                    // Vision-lift the subject so the wardrobe card becomes a sticker.
+                    if let original = UIImage(data: raw) {
+                        let lifted = await Task.detached(priority: .userInitiated) {
+                            try? await BackgroundRemover.removeBackground(from: original)
+                        }.value
+                        imageData = lifted ?? raw
+                    } else {
+                        imageData = raw
+                    }
                 }
             } catch {
                 self.error = error.localizedDescription

@@ -89,7 +89,7 @@ final class DripStore {
         guard let idx = wardrobe.firstIndex(where: { $0.id == itemID }) else { return }
         wardrobe[idx].lastWornAt = .now
         wardrobe[idx].wearCount += 1
-        // TODO: POST /v1/wardrobe/{id}/worn through sync once endpoint plumbing
+        // TODO: POST /wardrobe/{id}/worn through sync once endpoint plumbing
         // is generalized; offline-first local mutation is fine for v1.1.
     }
 

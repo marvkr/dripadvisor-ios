@@ -102,11 +102,11 @@ struct HTTPIntegrationSuite {
         func getDeserializesSnakeCase() async throws {
             MockURLProtocol.reset()
             MockURLProtocol.stub(
-                path: "/v1/thing", method: "GET", status: 200,
+                path: "/thing", method: "GET", status: 200,
                 bodyJSON: #"{"id":"abc","name":"Hoodie"}"#
             )
             let c = makeClient()
-            let got: Echo = try await c.get("/v1/thing")
+            let got: Echo = try await c.get("/thing")
             #expect(got == Echo(id: "abc", name: "Hoodie"))
         }
 
@@ -114,11 +114,11 @@ struct HTTPIntegrationSuite {
         func postEncodesSnakeCase() async throws {
             MockURLProtocol.reset()
             MockURLProtocol.stub(
-                path: "/v1/thing", method: "POST", status: 201,
+                path: "/thing", method: "POST", status: 201,
                 bodyJSON: #"{"id":"abc","name":"Hoodie"}"#
             )
             let c = makeClient()
-            let _: Echo = try await c.post("/v1/thing", body: Req(title: "hi"))
+            let _: Echo = try await c.post("/thing", body: Req(title: "hi"))
             let body = String(data: MockURLProtocol.lastBody ?? Data(), encoding: .utf8) ?? ""
             #expect(body.contains("\"title\":\"hi\""))
         }
@@ -126,10 +126,10 @@ struct HTTPIntegrationSuite {
         @Test("401 throws .unauthorized")
         func unauthorizedMapped() async {
             MockURLProtocol.reset()
-            MockURLProtocol.stub(path: "/v1/me", method: "GET", status: 401, bodyJSON: "{}")
+            MockURLProtocol.stub(path: "/me", method: "GET", status: 401, bodyJSON: "{}")
             let c = makeClient()
             do {
-                let _: Echo = try await c.get("/v1/me")
+                let _: Echo = try await c.get("/me")
                 Issue.record("expected error")
             } catch let APIError.unauthorized {
                 // ok
@@ -142,21 +142,21 @@ struct HTTPIntegrationSuite {
         func sendsBearer() async throws {
             MockURLProtocol.reset()
             MockURLProtocol.stub(
-                path: "/v1/me", method: "GET", status: 200,
+                path: "/me", method: "GET", status: 200,
                 bodyJSON: #"{"id":"x","name":"y"}"#
             )
             let c = makeClient(token: "abc123")
-            let _: Echo = try await c.get("/v1/me")
+            let _: Echo = try await c.get("/me")
             #expect(MockURLProtocol.lastRequest?.value(forHTTPHeaderField: "Authorization") == "Bearer abc123")
         }
 
         @Test("5xx maps to .badResponse with status + body")
         func badResponse() async {
             MockURLProtocol.reset()
-            MockURLProtocol.stub(path: "/v1/thing", method: "GET", status: 500, bodyJSON: "boom")
+            MockURLProtocol.stub(path: "/thing", method: "GET", status: 500, bodyJSON: "boom")
             let c = makeClient()
             do {
-                let _: Echo = try await c.get("/v1/thing")
+                let _: Echo = try await c.get("/thing")
                 Issue.record("expected error")
             } catch let APIError.badResponse(status, body) {
                 #expect(status == 500)
@@ -175,7 +175,7 @@ struct HTTPIntegrationSuite {
         func pushSucceeds() async {
             MockURLProtocol.reset()
             MockURLProtocol.stub(
-                path: "/v1/wardrobe", method: "POST", status: 201,
+                path: "/wardrobe", method: "POST", status: 201,
                 bodyJSON: #"{"id":"11111111-1111-1111-1111-111111111111","name":"Tee","brand":"Uniqlo","category":"top","tags":[],"created_at":"2026-04-23T09:00:00Z"}"#
             )
             let sync = WardrobeSync(api: makeAPI())
@@ -186,13 +186,13 @@ struct HTTPIntegrationSuite {
         @Test("push enqueues on server error, retry drains")
         func retryDrains() async {
             MockURLProtocol.reset()
-            MockURLProtocol.stub(path: "/v1/wardrobe", method: "POST", status: 500, bodyJSON: "boom")
+            MockURLProtocol.stub(path: "/wardrobe", method: "POST", status: 500, bodyJSON: "boom")
             let sync = WardrobeSync(api: makeAPI())
             await sync.pushAfterInsert(WardrobeItem(name: "Tee", brand: "Uniqlo", category: .top))
             #expect(sync.pendingCount == 1)
 
             MockURLProtocol.stub(
-                path: "/v1/wardrobe", method: "POST", status: 201,
+                path: "/wardrobe", method: "POST", status: 201,
                 bodyJSON: #"{"id":"22222222-2222-2222-2222-222222222222","name":"Tee","brand":"Uniqlo","category":"top","tags":[],"created_at":"2026-04-23T09:00:00Z"}"#
             )
             await sync.retryPending()
@@ -203,7 +203,7 @@ struct HTTPIntegrationSuite {
         func pullLatest() async throws {
             MockURLProtocol.reset()
             MockURLProtocol.stub(
-                path: "/v1/wardrobe", method: "GET", status: 200,
+                path: "/wardrobe", method: "GET", status: 200,
                 bodyJSON: #"""
                 {"items":[{"id":"33333333-3333-3333-3333-333333333333","name":"Jeans","brand":"Levi's","category":"bottom","tags":["denim"],"created_at":"2026-04-23T09:00:00Z"}]}
                 """#
@@ -224,7 +224,7 @@ struct HTTPIntegrationSuite {
         func addItemTriggersSync() async {
             MockURLProtocol.reset()
             MockURLProtocol.stub(
-                path: "/v1/wardrobe", method: "POST", status: 201,
+                path: "/wardrobe", method: "POST", status: 201,
                 bodyJSON: #"{"id":"44444444-4444-4444-4444-444444444444","name":"Tee","brand":"Uniqlo","category":"top","tags":[],"created_at":"2026-04-23T09:00:00Z"}"#
             )
             let sync = WardrobeSync(api: makeAPI())

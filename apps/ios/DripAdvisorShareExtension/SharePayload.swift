@@ -12,7 +12,7 @@ struct SharePayload: Sendable {
 
 /// Pending wardrobe item produced inside the Share Extension. We drop these
 /// into the App Group container; the main app picks them up on next launch
-/// and POSTs to /v1/wardrobe.
+/// and POSTs to /wardrobe.
 struct PendingWardrobeItem: Codable, Sendable {
     let id: UUID
     let name: String

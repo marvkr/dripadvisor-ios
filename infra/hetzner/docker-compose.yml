@@ -96,6 +96,20 @@ services:
       # liveness; this stanza is documented intent for when we add it.
       disable: true
 
+  riverui:
+    # River jobs dashboard. Bound to loopback only — reach via SSH tunnel:
+    #   ssh -i ~/.ssh/id_ed25519_hetzner -fN -L 8085:localhost:8085 root@<box-ip>
+    # then open http://localhost:8085 on your laptop.
+    image: ghcr.io/riverqueue/riverui:latest
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${PG_USER:-dripadvisor}:${PG_PASSWORD}@postgres:5432/${PG_DB:-dripadvisor}?sslmode=disable
+    ports:
+      - "127.0.0.1:8085:8080"
+    depends_on:
+      postgres: { condition: service_healthy }
+    networks: [dripnet]
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped

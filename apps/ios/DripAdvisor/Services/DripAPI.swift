@@ -38,11 +38,21 @@ struct DripAPI: Sendable {
     }
 
     func appleSignIn(identityToken: String) async throws -> AppleSignInResponse {
-        try await client.post("/v1/auth/apple", body: AppleSignInRequest(identityToken: identityToken))
+        try await client.post("/auth/apple", body: AppleSignInRequest(identityToken: identityToken))
     }
 
+    struct EmptyBody: Encodable {}
+
+    #if DEBUG
+    /// Dev-only sign-in that mints a real session JWT for a deterministic
+    /// fixed user. Only enabled when the backend is started with Env=="dev".
+    func devSignIn() async throws -> AppleSignInResponse {
+        try await client.post("/auth/dev", body: EmptyBody())
+    }
+    #endif
+
     func me() async throws -> UserDTO {
-        try await client.get("/v1/me")
+        try await client.get("/me")
     }
 
     // MARK: Wardrobe
@@ -70,16 +80,16 @@ struct DripAPI: Sendable {
     }
 
     func listWardrobe() async throws -> [WardrobeItemDTO] {
-        let resp: WardrobeListResponse = try await client.get("/v1/wardrobe")
+        let resp: WardrobeListResponse = try await client.get("/wardrobe")
         return resp.items
     }
 
     func addWardrobe(_ req: AddWardrobeRequest) async throws -> WardrobeItemDTO {
-        try await client.post("/v1/wardrobe", body: req)
+        try await client.post("/wardrobe", body: req)
     }
 
     func deleteWardrobe(id: UUID) async throws {
-        try await client.delete("/v1/wardrobe/\(id.uuidString.lowercased())")
+        try await client.delete("/wardrobe/\(id.uuidString.lowercased())")
     }
 
     // MARK: Scrape (Add-from-web)
@@ -98,7 +108,7 @@ struct DripAPI: Sendable {
     }
 
     func scrapeWardrobe(url: String) async throws -> ScrapeResponse {
-        try await client.post("/v1/wardrobe/scrape", body: ScrapeRequest(url: url))
+        try await client.post("/wardrobe/scrape", body: ScrapeRequest(url: url))
     }
 
     // MARK: Try-On
@@ -118,7 +128,7 @@ struct DripAPI: Sendable {
     }
 
     func runTryOn(_ req: TryOnRequest) async throws -> TryOnResponse {
-        try await client.post("/v1/tryon", body: req)
+        try await client.post("/tryon", body: req)
     }
 
     // MARK: Outfits
@@ -145,12 +155,12 @@ struct DripAPI: Sendable {
     }
 
     func listOutfits() async throws -> [OutfitDTO] {
-        let resp: OutfitListResponse = try await client.get("/v1/outfits")
+        let resp: OutfitListResponse = try await client.get("/outfits")
         return resp.outfits
     }
 
     func createOutfit(_ req: CreateOutfitRequest) async throws -> OutfitDTO {
-        try await client.post("/v1/outfits", body: req)
+        try await client.post("/outfits", body: req)
     }
 
     // MARK: Garment analysis (auto-fill)
@@ -167,7 +177,7 @@ struct DripAPI: Sendable {
     /// Returns best-effort {name, brand, category, color, tags} — user edits later if wrong.
     func analyzeGarment(jpeg: Data) async throws -> GarmentAnalysisDTO {
         let boundary = "DripBoundary-\(UUID().uuidString)"
-        guard let url = URL(string: "/v1/wardrobe/analyze", relativeTo: client.baseURL) else {
+        guard let url = URL(string: "/wardrobe/analyze", relativeTo: client.baseURL) else {
             throw APIError.badURL
         }
         var req = URLRequest(url: url)
@@ -198,7 +208,7 @@ struct DripAPI: Sendable {
     /// Backend stores in S3 at avatars/{user_id}.jpg.
     func uploadAvatar(jpeg: Data) async throws {
         let boundary = "DripBoundary-\(UUID().uuidString)"
-        guard let url = URL(string: "/v1/me/avatar", relativeTo: client.baseURL) else {
+        guard let url = URL(string: "/me/avatar", relativeTo: client.baseURL) else {
             throw APIError.badURL
         }
         var req = URLRequest(url: url)
@@ -224,7 +234,7 @@ struct DripAPI: Sendable {
 
     /// Streams the user's avatar bytes. Returns nil on 404.
     func fetchAvatar() async throws -> Data? {
-        guard let url = URL(string: "/v1/me/avatar", relativeTo: client.baseURL) else {
+        guard let url = URL(string: "/me/avatar", relativeTo: client.baseURL) else {
             throw APIError.badURL
         }
         var req = URLRequest(url: url)

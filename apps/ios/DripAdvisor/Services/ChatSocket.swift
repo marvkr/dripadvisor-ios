@@ -1,6 +1,6 @@
 import Foundation
 
-/// Live receive for chat events. Connects to `/v1/ws` with the JWT in the
+/// Live receive for chat events. Connects to `/ws` with the JWT in the
 /// Authorization header, surfaces incoming messages as an AsyncStream.
 ///
 /// Reconnect policy: on any read error, wait the backoff window then retry
@@ -60,7 +60,7 @@ final class ChatSocket {
         guard var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false) else { return }
         let scheme = components.scheme
         components.scheme = (scheme == "https") ? "wss" : "ws"
-        components.path = "/v1/ws"
+        components.path = "/ws"
         guard let wsURL = components.url else { return }
 
         var req = URLRequest(url: wsURL)

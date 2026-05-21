@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 
 /// Runs the real try-on flow: sends the user's avatar + a garment image to
-/// `/v1/tryon`, waits for Gemini, returns the composite image data + URL.
+/// `/tryon`, waits for Gemini, returns the composite image data + URL.
 ///
 /// Synchronous in v1 (single long-lived HTTPS request, ~5–60s). Locked design
 /// per README "v1.1 Chat Design (locked)" — body bytes never persisted server-
@@ -10,7 +10,7 @@ import UIKit
 struct TryOnService: Sendable {
     let api: DripAPI
 
-    /// Long-timeout session for fetching the composite from R2. The /v1/tryon
+    /// Long-timeout session for fetching the composite from R2. The /tryon
     /// POST itself goes through the shared APIClient (already long-timeout via
     /// scheme config).
     private static let downloadSession: URLSession = {

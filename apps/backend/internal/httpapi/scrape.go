@@ -15,7 +15,7 @@ import (
 	"golang.org/x/net/html"
 )
 
-// /v1/wardrobe/scrape — extracts product metadata from a pasted URL so the
+// /wardrobe/scrape — extracts product metadata from a pasted URL so the
 // client can preview before saving as a wishlist item. Lightweight v1: fetch
 // page, parse OG tags + schema.org product JSON-LD if present. Firecrawl
 // integration is a v1.1 upgrade for JS-heavy sites.

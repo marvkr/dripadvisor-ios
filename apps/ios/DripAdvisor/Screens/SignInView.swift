@@ -59,11 +59,21 @@ struct SignInView: View {
 
     #if DEBUG
     private func continueAsDev() {
-        auth.signIn(
-            token: "dev-bypass-token",
-            userID: UUID(uuidString: "DE7E0000-0000-0000-0000-000000000001") ?? UUID(),
-            expiresAt: Date().addingTimeInterval(60 * 60 * 24 * 30)
-        )
+        isSigningIn = true
+        error = nil
+        Task {
+            defer { isSigningIn = false }
+            do {
+                let resp = try await api.devSignIn()
+                self.auth.signIn(
+                    token: resp.session,
+                    userID: resp.user.id,
+                    expiresAt: resp.expiresAt
+                )
+            } catch {
+                self.error = "Dev sign-in failed: \(error.localizedDescription)"
+            }
+        }
     }
     #endif
 

@@ -32,12 +32,13 @@ type Deps struct {
 	Chats    *db.ChatRepo
 	Apple    *auth.AppleVerifier
 	Signer   *auth.Signer
-	Gemini   *gemini.Client // optional; nil disables /v1/tryon
+	Gemini   *gemini.Client // optional; nil disables /tryon
 	Camofox  *scrape.Camofox // optional; nil falls back to naive scrape
 	Storage  *storage.Client
-	Realtime *realtime.Redis        // optional; nil disables /v1/ws + chat fan-out
-	Gateway  *realtime.Gateway      // optional; nil disables /v1/ws
+	Realtime *realtime.Redis        // optional; nil disables /ws + chat fan-out
+	Gateway  *realtime.Gateway      // optional; nil disables /ws
 	River    *river.Client[pgx.Tx]  // optional; nil disables stylist enqueue
+	DevAuth  bool                   // when true, exposes /auth/dev (Env=="dev" only)
 }
 
 // NewRouter builds the chi router with all endpoints mounted.
@@ -52,50 +53,53 @@ func NewRouter(d *Deps) http.Handler {
 		writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 	})
 
-	r.Post("/v1/auth/apple", handleAppleSignIn(d))
+	r.Post("/auth/apple", handleAppleSignIn(d))
+	if d.DevAuth {
+		r.Post("/auth/dev", handleDevSignIn(d))
+	}
 
 	r.Group(func(g chi.Router) {
 		g.Use(auth.Middleware(d.Signer))
 
-		g.Get("/v1/me", handleMe(d))
-		g.Post("/v1/me/avatar", handleUploadAvatar(d))
-		g.Get("/v1/me/avatar", handleGetAvatar(d))
-		g.Get("/v1/users/{id}/avatar", handleGetUserAvatar(d))
-		g.Get("/v1/wardrobe", handleListWardrobe(d))
-		g.Post("/v1/wardrobe", handleAddWardrobe(d))
-		g.Post("/v1/wardrobe/{id}/worn", handleMarkWorn(d))
-		g.Post("/v1/wardrobe/scrape", handleScrapeWardrobe(d))
-		g.Post("/v1/wardrobe/analyze", handleAnalyzeGarment(d))
-		g.Delete("/v1/wardrobe/{id}", handleDeleteWardrobe(d))
-		g.Get("/v1/outfits", handleListOutfits(d))
-		g.Post("/v1/outfits", handleCreateOutfit(d))
+		g.Get("/me", handleMe(d))
+		g.Post("/me/avatar", handleUploadAvatar(d))
+		g.Get("/me/avatar", handleGetAvatar(d))
+		g.Get("/users/{id}/avatar", handleGetUserAvatar(d))
+		g.Get("/wardrobe", handleListWardrobe(d))
+		g.Post("/wardrobe", handleAddWardrobe(d))
+		g.Post("/wardrobe/{id}/worn", handleMarkWorn(d))
+		g.Post("/wardrobe/scrape", handleScrapeWardrobe(d))
+		g.Post("/wardrobe/analyze", handleAnalyzeGarment(d))
+		g.Delete("/wardrobe/{id}", handleDeleteWardrobe(d))
+		g.Get("/outfits", handleListOutfits(d))
+		g.Post("/outfits", handleCreateOutfit(d))
 
-		// /v1/tryon needs its own longer timeout — Gemini composites take
+		// /tryon needs its own longer timeout — Gemini composites take
 		// 5–30s; chi's Recoverer + Timeout middleware would kill the request
 		// at the default 30s. Mount under a sub-router with bumped budget.
 		g.Group(func(t chi.Router) {
 			t.Use(middleware.Timeout(100 * time.Second))
-			t.Post("/v1/tryon", handleTryOn(d))
+			t.Post("/tryon", handleTryOn(d))
 		})
 
 		// v1.1 chat REST (no realtime yet — PR2 adds WebSocket + Redis)
-		g.Get("/v1/chats", handleListChats(d))
-		g.Post("/v1/chats", handleCreateChat(d))
-		g.Post("/v1/chats/ensure-stylist", handleEnsureStylistDirect(d))
-		g.Get("/v1/chats/{id}", handleGetChat(d))
-		g.Post("/v1/chats/{id}/participants", handleAddParticipant(d))
-		g.Delete("/v1/chats/{id}/participants/{user_id}", handleRemoveParticipant(d))
-		g.Get("/v1/chats/{id}/messages", handleListMessages(d))
-		g.Post("/v1/chats/{id}/messages", handleSendMessage(d))
-		g.Post("/v1/chats/{id}/read", handleSetRead(d))
-		g.Post("/v1/messages/{id}/reactions", handleAddReaction(d))
-		g.Delete("/v1/messages/{id}/reactions/{emoji}", handleRemoveReaction(d))
+		g.Get("/chats", handleListChats(d))
+		g.Post("/chats", handleCreateChat(d))
+		g.Post("/chats/ensure-stylist", handleEnsureStylistDirect(d))
+		g.Get("/chats/{id}", handleGetChat(d))
+		g.Post("/chats/{id}/participants", handleAddParticipant(d))
+		g.Delete("/chats/{id}/participants/{user_id}", handleRemoveParticipant(d))
+		g.Get("/chats/{id}/messages", handleListMessages(d))
+		g.Post("/chats/{id}/messages", handleSendMessage(d))
+		g.Post("/chats/{id}/read", handleSetRead(d))
+		g.Post("/messages/{id}/reactions", handleAddReaction(d))
+		g.Delete("/messages/{id}/reactions/{emoji}", handleRemoveReaction(d))
 	})
 
-	// /v1/ws sits OUTSIDE the chi Timeout middleware (it would slam shut at
+	// /ws sits OUTSIDE the chi Timeout middleware (it would slam shut at
 	// 30s — locked design wants long-lived sockets). Authentication happens
 	// inside handleWS via either Authorization header or ?token= query.
-	r.Get("/v1/ws", handleWS(d))
+	r.Get("/ws", handleWS(d))
 
 	return r
 }
@@ -130,6 +134,33 @@ func handleAppleSignIn(d *Deps) http.HandlerFunc {
 		user, err := d.Users.UpsertByAppleSub(ctx, claims.Subject, claims.Email)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "user upsert failed")
+			return
+		}
+		tok, exp, err := d.Signer.Issue(user.ID)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "sign session failed")
+			return
+		}
+		writeJSON(w, http.StatusOK, appleSignInResp{
+			Session:   tok,
+			ExpiresAt: exp,
+			User:      newUserDTO(user),
+		})
+	}
+}
+
+// handleDevSignIn mints a real session JWT for a deterministic dev user.
+// Only registered when cfg.Env == "dev". Lets the iOS DEBUG "Continue as Dev User"
+// shortcut exercise auth-gated routes without going through Apple Sign-In.
+func handleDevSignIn(d *Deps) http.HandlerFunc {
+	const devAppleSub = "dev-bypass:0001"
+	const devEmail = "dev@dripadvisor.local"
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 4*time.Second)
+		defer cancel()
+		user, err := d.Users.UpsertByAppleSub(ctx, devAppleSub, devEmail)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "dev user upsert failed")
 			return
 		}
 		tok, exp, err := d.Signer.Issue(user.ID)

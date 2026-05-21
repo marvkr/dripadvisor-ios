@@ -29,7 +29,7 @@ struct APIClient: Sendable {
     let session: URLSession
     let tokenProvider: @Sendable () -> String?
 
-    /// Default session: longer timeouts than `.shared` because /v1/tryon waits
+    /// Default session: longer timeouts than `.shared` because /tryon waits
     /// up to ~90s for Gemini Nano Banana Pro to return a composite.
     private static let defaultSession: URLSession = {
         let cfg = URLSessionConfiguration.default

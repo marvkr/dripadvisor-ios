@@ -45,6 +45,15 @@ services:
       timeout: 3s
       retries: 20
 
+  riverui:
+    image: ghcr.io/riverqueue/riverui:latest
+    environment:
+      DATABASE_URL: postgres://dripadvisor:dev@postgres:5432/dripadvisor?sslmode=disable
+    ports:
+      - "8085:8080"
+    depends_on:
+      postgres: { condition: service_healthy }
+
 volumes:
   pgdata:
   redisdata:

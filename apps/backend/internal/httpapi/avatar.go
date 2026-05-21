@@ -45,7 +45,7 @@ func handleUploadAvatar(d *Deps) http.HandlerFunc {
 			writeError(w, http.StatusInternalServerError, "storage put failed")
 			return
 		}
-		url := "/v1/me/avatar"
+		url := "/me/avatar"
 		if err := d.Users.SetAvatarURL(r.Context(), uid, url); err != nil {
 			writeError(w, http.StatusInternalServerError, "db update failed")
 			return
