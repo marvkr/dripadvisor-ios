@@ -63,7 +63,7 @@ services:
     ports:
       - "7700:7000"
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O- http://localhost:7000/api/ping || exit 1"]
+      test: ["CMD", "curl", "-fs", "http://localhost:7000/openapi.json"]
       interval: 10s
       timeout: 5s
       retries: 10

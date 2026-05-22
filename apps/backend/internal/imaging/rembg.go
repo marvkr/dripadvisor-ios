@@ -33,7 +33,9 @@ func (r *Rembg) Available(ctx context.Context) bool {
 	if r == nil || r.baseURL == "" {
 		return false
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, r.baseURL+"/api/ping", nil)
+	// rembg's HTTP server only ships /api/remove. /openapi.json is a
+	// cheap 200 from FastAPI's auto-docs and confirms the process is up.
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, r.baseURL+"/openapi.json", nil)
 	if err != nil {
 		return false
 	}
