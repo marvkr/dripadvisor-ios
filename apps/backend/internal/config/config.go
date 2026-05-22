@@ -25,6 +25,7 @@ type Config struct {
 	GeminiAPIKey       string
 	CamofoxURL         string
 	RembgURL           string
+	DevAuth            bool
 	FreeTryOnsPerWeek  int
 	FreeStylistPerWeek int
 }
@@ -48,6 +49,7 @@ func Load() (*Config, error) {
 		GeminiAPIKey:       env("GEMINI_API_KEY", ""),
 		CamofoxURL:         env("CAMOFOX_URL", ""),
 		RembgURL:           env("REMBG_URL", ""),
+		DevAuth:            envBool("DEV_AUTH", false),
 		FreeTryOnsPerWeek:  envInt("FREE_TRYONS_PER_WEEK", 3),
 		FreeStylistPerWeek: envInt("FREE_STYLIST_REPLIES_PER_WEEK", 2),
 	}

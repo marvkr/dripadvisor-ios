@@ -154,7 +154,7 @@ func main() {
 		Storage:  store,
 		Realtime: rdb,
 		Gateway:  gateway,
-		DevAuth:  cfg.Env == "dev",
+		DevAuth:  cfg.Env == "dev" || cfg.DevAuth,
 	}
 
 	srv := &http.Server{
