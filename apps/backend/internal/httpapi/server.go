@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -248,10 +249,37 @@ func handleListWardrobe(d *Deps) http.HandlerFunc {
 		}
 		out := make([]wardrobeItemDTO, 0, len(items))
 		for _, i := range items {
-			out = append(out, toWardrobeDTO(i))
+			dto := toWardrobeDTO(i)
+			dto.ImageURL = refreshedCutoutURL(r.Context(), d, dto.ImageURL)
+			out = append(out, dto)
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"items": out})
 	}
+}
+
+// refreshedCutoutURL replaces a stored R2 presigned URL with a freshly-signed
+// one (1h TTL). The DB persists the original signature from scrape time which
+// expires after an hour, so any subsequent /wardrobe read would hand the iOS
+// client an expired link. We re-derive the object key from the URL path and
+// re-presign on every read. Non-R2 URLs (legacy MinIO public links, future
+// non-cutout image hosts) pass through unchanged.
+func refreshedCutoutURL(ctx context.Context, d *Deps, stored *string) *string {
+	if stored == nil || d.Storage == nil {
+		return stored
+	}
+	parsed, err := url.Parse(*stored)
+	if err != nil {
+		return stored
+	}
+	key := strings.TrimPrefix(parsed.Path, "/")
+	if key == "" || !strings.HasPrefix(key, "cutouts/") {
+		return stored
+	}
+	fresh, err := d.Storage.PresignedGetURL(ctx, key, time.Hour)
+	if err != nil {
+		return stored
+	}
+	return &fresh
 }
 
 func handleAddWardrobe(d *Deps) http.HandlerFunc {
