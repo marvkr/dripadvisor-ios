@@ -109,7 +109,7 @@ func liftAndCache(ctx context.Context, d *Deps, srcURL string) (string, bool) {
 	// returns the metadata stream cheaply; the body Close drops it.
 	if rc, _, err := d.Storage.Get(ctx, key); err == nil {
 		_ = rc.Close()
-		return d.Storage.PublicURL(key), true
+		return presignOrEmpty(ctx, d, key)
 	}
 	imgBytes, err := fetchImage(ctx, srcURL)
 	if err != nil {
@@ -125,7 +125,19 @@ func liftAndCache(ctx context.Context, d *Deps, srcURL string) (string, bool) {
 		slog.WarnContext(ctx, "rembg: storage put failed", "key", key, "err", err.Error())
 		return "", false
 	}
-	return d.Storage.PublicURL(key), true
+	return presignOrEmpty(ctx, d, key)
+}
+
+// 1h TTL is plenty for the scrape→display flow; iOS receives the URL and
+// renders almost immediately. When iOS later needs the same cutout (e.g.
+// editing the wardrobe item), backend re-signs on demand.
+func presignOrEmpty(ctx context.Context, d *Deps, key string) (string, bool) {
+	url, err := d.Storage.PresignedGetURL(ctx, key, time.Hour)
+	if err != nil {
+		slog.WarnContext(ctx, "rembg: presign failed", "key", key, "err", err.Error())
+		return "", false
+	}
+	return url, true
 }
 
 func fetchImage(ctx context.Context, target string) ([]byte, error) {

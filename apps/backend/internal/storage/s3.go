@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
@@ -74,6 +75,21 @@ func (c *Client) Get(ctx context.Context, key string) (io.ReadCloser, string, er
 // PublicURL returns a path-style URL for the given key (for MinIO local dev / R2 when bucket is public).
 func (c *Client) PublicURL(key string) string {
 	return fmt.Sprintf("%s/%s/%s", c.endpoint, c.bucket, key)
+}
+
+// PresignedGetURL returns a time-limited URL that grants GET access to an
+// object in a private bucket. Used for R2 prod where the bucket isn't
+// public.
+func (c *Client) PresignedGetURL(ctx context.Context, key string, ttl time.Duration) (string, error) {
+	ps := s3.NewPresignClient(c.s3)
+	req, err := ps.PresignGetObject(ctx,
+		&s3.GetObjectInput{Bucket: aws.String(c.bucket), Key: aws.String(key)},
+		s3.WithPresignExpires(ttl),
+	)
+	if err != nil {
+		return "", err
+	}
+	return req.URL, nil
 }
 
 // EnsureBucket creates the bucket if it doesn't exist (used in local dev init).
