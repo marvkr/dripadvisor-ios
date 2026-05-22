@@ -54,6 +54,7 @@ services:
       SESSION_TTL_HOURS: "${SESSION_TTL_HOURS:-720}"
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       CAMOFOX_URL: ${CAMOFOX_URL:-http://host.docker.internal:9377}
+      REMBG_URL: ${REMBG_URL:-http://rembg:7000}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks: [dripnet]
@@ -66,6 +67,19 @@ services:
       # has no shell so we can't use wget/curl. Caddy upstream check covers
       # liveness; this stanza is documented intent for when we add it.
       disable: true
+
+  rembg:
+    # Background removal HTTP server. POST /api/remove returns transparent PNG.
+    # Default model u2net bundled; set REMBG_MODEL env to swap to bria-rmbg.
+    image: danielgatis/rembg:latest
+    restart: unless-stopped
+    command: s --host 0.0.0.0 --port 7000
+    networks: [dripnet]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:7000/api/ping || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
 
   riverui:
     # River jobs dashboard. Bound to loopback only — reach via SSH tunnel:

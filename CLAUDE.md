@@ -77,7 +77,7 @@ Rule of thumb: if you're about to assert a performance number, a library behavio
 - **State** — `@Observable` + `@MainActor` for stores. Not `ObservableObject`. Not `@StateObject`/`@ObservedObject`.
 - **Navigation** — `NavigationStack`, not `NavigationView`.
 - **Async** — `async`/`await` + structured concurrency. Not completion handlers. Not `DispatchQueue.main.async` unless bridging legacy APIs.
-- **Images** — Apple Vision (`VNGenerateForegroundInstanceMaskRequest`) for background removal on-device. Never round-trip to server for BG removal.
+- **Images** — Apple Vision (`VNGenerateForegroundInstanceMaskRequest`) for background removal of **user-originated** images only (selfies, in-closet shots, body avatar). Scraped ecommerce images (Lulu, Uniqlo, Zara) route through server-side rembg (Bria RMBG 2.0 / BiRefNet on the Hetzner box) instead — Vision is unreliable on commercial studio shots with low contrast vs backdrop. Locked 2026-05-22 after Lulu + Uniqlo sim verification both showed Vision returning empty `allInstances`.
 - **DB columns** — `TEXT` + `CHECK (char_length(col) <= n)`. Never `VARCHAR(n)`. Never `VARCHAR(255)`.
 - **Queue** — River (Postgres-backed) for durable jobs. Raw Redis `PUBLISH` for ephemeral chat fan-out. Never Asynq for durable work.
 - **Image models** — Gemini Nano Banana Pro (`gemini-3-pro-image-preview`) / Nano Banana 2 (`gemini-3.1-flash-image-preview`). Never Seedream / Flux / SDXL.

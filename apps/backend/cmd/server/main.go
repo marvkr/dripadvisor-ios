@@ -16,6 +16,7 @@ import (
 	"github.com/dripadvisor/backend/internal/db"
 	"github.com/dripadvisor/backend/internal/gemini"
 	"github.com/dripadvisor/backend/internal/httpapi"
+	"github.com/dripadvisor/backend/internal/imaging"
 	"github.com/dripadvisor/backend/internal/realtime"
 	"github.com/dripadvisor/backend/internal/scrape"
 	"github.com/dripadvisor/backend/internal/storage"
@@ -129,6 +130,16 @@ func main() {
 		}
 	}
 
+	var rembg *imaging.Rembg
+	if cfg.RembgURL != "" {
+		rembg = imaging.NewRembg(cfg.RembgURL)
+		if rembg.Available(ctx) {
+			slog.Info("rembg available", "url", cfg.RembgURL)
+		} else {
+			slog.Warn("rembg configured but unreachable", "url", cfg.RembgURL)
+		}
+	}
+
 	deps := &httpapi.Deps{
 		Users:    db.NewUserRepo(pool),
 		Wardrobe: wardrobeRepo,
@@ -139,6 +150,7 @@ func main() {
 		Signer:   auth.NewSigner(cfg.JWTSigningSecret, cfg.SessionTTLHours),
 		Gemini:   geminiClient,
 		Camofox:  camofox,
+		Rembg:    rembg,
 		Storage:  store,
 		Realtime: rdb,
 		Gateway:  gateway,

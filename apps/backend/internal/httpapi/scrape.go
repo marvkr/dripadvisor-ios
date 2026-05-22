@@ -1,10 +1,14 @@
 package httpapi
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -81,9 +85,66 @@ func handleScrapeWardrobe(d *Deps) http.HandlerFunc {
 			}
 		}
 
+		// Background removal pipeline: fetch the scraped image, run rembg,
+		// upload the transparent PNG to object storage. Key is content-hash
+		// of the source URL so repeat scrapes hit the cache instead of
+		// re-running the model. Falls back silently to the raw image URL if
+		// any step fails — UX stays alive, just shows non-sticker preview.
+		if d.Rembg != nil && d.Storage != nil && resp.ImageURL != nil {
+			if cutoutURL, ok := liftAndCache(ctx, d, *resp.ImageURL); ok {
+				resp.ImageURL = &cutoutURL
+			}
+		}
+
 		resp.SourceURL = u.String()
 		writeJSON(w, http.StatusOK, resp)
 	}
+}
+
+func liftAndCache(ctx context.Context, d *Deps, srcURL string) (string, bool) {
+	sum := sha256.Sum256([]byte(srcURL))
+	key := "cutouts/" + hex.EncodeToString(sum[:]) + ".png"
+	// Cache hit short-circuits the heavy rembg call. We don't bother
+	// downloading the body — HeadObject would be cleaner but Get already
+	// returns the metadata stream cheaply; the body Close drops it.
+	if rc, _, err := d.Storage.Get(ctx, key); err == nil {
+		_ = rc.Close()
+		return d.Storage.PublicURL(key), true
+	}
+	imgBytes, err := fetchImage(ctx, srcURL)
+	if err != nil {
+		slog.WarnContext(ctx, "rembg: fetch image failed", "url", srcURL, "err", err.Error())
+		return "", false
+	}
+	cutout, err := d.Rembg.Remove(ctx, imgBytes, "scrape.jpg")
+	if err != nil {
+		slog.WarnContext(ctx, "rembg: remove failed", "url", srcURL, "err", err.Error())
+		return "", false
+	}
+	if err := d.Storage.Put(ctx, key, bytes.NewReader(cutout), "image/png"); err != nil {
+		slog.WarnContext(ctx, "rembg: storage put failed", "key", key, "err", err.Error())
+		return "", false
+	}
+	return d.Storage.PublicURL(key), true
+}
+
+func fetchImage(ctx context.Context, target string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent",
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15")
+	client := &http.Client{Timeout: 15 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode >= 400 {
+		return nil, errors.New("non-2xx fetching image")
+	}
+	return io.ReadAll(io.LimitReader(resp.Body, 15<<20))
 }
 
 func validateScrapeURL(raw string) (*url.URL, error) {

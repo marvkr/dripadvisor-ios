@@ -19,6 +19,7 @@ import (
 	"github.com/dripadvisor/backend/internal/auth"
 	"github.com/dripadvisor/backend/internal/db"
 	"github.com/dripadvisor/backend/internal/gemini"
+	"github.com/dripadvisor/backend/internal/imaging"
 	"github.com/dripadvisor/backend/internal/realtime"
 	"github.com/dripadvisor/backend/internal/scrape"
 	"github.com/dripadvisor/backend/internal/storage"
@@ -34,6 +35,7 @@ type Deps struct {
 	Signer   *auth.Signer
 	Gemini   *gemini.Client // optional; nil disables /tryon
 	Camofox  *scrape.Camofox // optional; nil falls back to naive scrape
+	Rembg    *imaging.Rembg  // optional; nil skips server-side BG removal
 	Storage  *storage.Client
 	Realtime *realtime.Redis        // optional; nil disables /ws + chat fan-out
 	Gateway  *realtime.Gateway      // optional; nil disables /ws

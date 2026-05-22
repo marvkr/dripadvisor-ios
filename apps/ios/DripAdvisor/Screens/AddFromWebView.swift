@@ -153,16 +153,12 @@ struct AddFromWebView: View {
                 if let n = resp.name { name = n }
                 if let b = resp.brand { brand = b }
                 if let imgURL = resp.imageUrl.flatMap(URL.init(string:)) {
+                    // Backend already ran rembg server-side and cached the
+                    // transparent-PNG cutout in R2/MinIO — just fetch it. On-
+                    // device Vision is unreliable on commercial ecom studio
+                    // shots (Lulu, Uniqlo); see CLAUDE.md.
                     let (raw, _) = try await URLSession.shared.data(from: imgURL)
-                    // Vision-lift the subject so the wardrobe card becomes a sticker.
-                    if let original = UIImage(data: raw) {
-                        let lifted = await Task.detached(priority: .userInitiated) {
-                            try? await BackgroundRemover.removeBackground(from: original)
-                        }.value
-                        imageData = lifted ?? raw
-                    } else {
-                        imageData = raw
-                    }
+                    imageData = raw
                 }
             } catch {
                 self.error = error.localizedDescription

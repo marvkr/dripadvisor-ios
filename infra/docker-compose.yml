@@ -54,6 +54,20 @@ services:
     depends_on:
       postgres: { condition: service_healthy }
 
+  rembg:
+    # Background removal HTTP server. Default model bundled (u2net) ~170MB;
+    # downloads better models (birefnet-general, bria-rmbg) on first request.
+    # API: POST /api/remove (multipart image file) → PNG bytes with alpha.
+    image: danielgatis/rembg:latest
+    command: s --host 0.0.0.0 --port 7000
+    ports:
+      - "7700:7000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:7000/api/ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
 volumes:
   pgdata:
   redisdata:

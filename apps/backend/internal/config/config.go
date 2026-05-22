@@ -24,6 +24,7 @@ type Config struct {
 	SessionTTLHours    int
 	GeminiAPIKey       string
 	CamofoxURL         string
+	RembgURL           string
 	FreeTryOnsPerWeek  int
 	FreeStylistPerWeek int
 }
@@ -46,6 +47,7 @@ func Load() (*Config, error) {
 		SessionTTLHours:    envInt("SESSION_TTL_HOURS", 720),
 		GeminiAPIKey:       env("GEMINI_API_KEY", ""),
 		CamofoxURL:         env("CAMOFOX_URL", ""),
+		RembgURL:           env("REMBG_URL", ""),
 		FreeTryOnsPerWeek:  envInt("FREE_TRYONS_PER_WEEK", 3),
 		FreeStylistPerWeek: envInt("FREE_STYLIST_REPLIES_PER_WEEK", 2),
 	}
